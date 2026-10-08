@@ -249,9 +249,12 @@ export default function ExperienceDetailPage() {
             </div>
 
             {/* Guide Profile Card */}
-            <div className="p-5 rounded-2xl bg-white border border-neutral-200/80 shadow-xs flex items-center justify-between">
+            <Link
+              to={experience.guideId ? `/guide-profile/${experience.guideId}` : '#'}
+              className="p-5 rounded-2xl bg-white border border-neutral-200/80 shadow-xs flex items-center justify-between hover:border-guide-primary/40 hover:shadow-md transition-all group"
+            >
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-traveller-lightMint text-traveller-forestDark font-bold text-lg flex items-center justify-center border-2 border-traveller-mint/40 overflow-hidden shadow-xs">
+                <div className="w-14 h-14 rounded-full bg-traveller-lightMint text-traveller-forestDark font-bold text-lg flex items-center justify-center border-2 border-traveller-mint/40 overflow-hidden shadow-xs flex-shrink-0 group-hover:scale-105 transition-transform">
                   {experience.guideImage ? (
                     <img src={experience.guideImage} alt={experience.guideName} className="w-full h-full object-cover" />
                   ) : (
@@ -265,7 +268,7 @@ export default function ExperienceDetailPage() {
                       Verified Local Guide
                     </span>
                   </div>
-                  <h3 className="font-extrabold text-base text-neutral-900 mt-0.5">
+                  <h3 className="font-extrabold text-base text-neutral-900 mt-0.5 group-hover:text-guide-primary transition-colors">
                     Hosted by {experience.guideName || 'Native Himalayan Guide'}
                   </h3>
                   <p className="text-xs text-neutral-500">
@@ -273,7 +276,11 @@ export default function ExperienceDetailPage() {
                   </p>
                 </div>
               </div>
-            </div>
+
+              <span className="text-xs font-bold text-guide-primary group-hover:translate-x-1 transition-transform hidden sm:inline">
+                View Host Profile &gt;
+              </span>
+            </Link>
 
             {/* Description / Story */}
             <div className="space-y-3 bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs">

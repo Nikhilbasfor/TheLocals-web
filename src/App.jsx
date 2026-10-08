@@ -13,6 +13,8 @@ import ExperienceDetailPage from './pages/traveller/ExperienceDetailPage';
 import TravellerBookingsPage from './pages/traveller/TravellerBookingsPage';
 import WishlistPage from './pages/traveller/WishlistPage';
 import TravellerProfilePage from './pages/traveller/TravellerProfilePage';
+import VerifiedGuidesPage from './pages/traveller/VerifiedGuidesPage';
+import GuidePublicProfilePage from './pages/traveller/GuidePublicProfilePage';
 
 // Guide Flow
 import GuideOnboardingPage from './pages/guide/GuideOnboardingPage';
@@ -50,6 +52,8 @@ function AppRoutes() {
       {/* Traveller Routes */}
       <Route path="/explore" element={<ExploreHomePage />} />
       <Route path="/experience/:id" element={<ExperienceDetailPage />} />
+      <Route path="/guides" element={<VerifiedGuidesPage />} />
+      <Route path="/guide-profile/:guideId" element={<GuidePublicProfilePage />} />
       <Route path="/bookings" element={<TravellerRoute><TravellerBookingsPage /></TravellerRoute>} />
       <Route path="/wishlist" element={<TravellerRoute><WishlistPage /></TravellerRoute>} />
       <Route path="/profile" element={<TravellerRoute><TravellerProfilePage /></TravellerRoute>} />

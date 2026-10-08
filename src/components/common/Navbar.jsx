@@ -13,8 +13,10 @@ import {
   PlusCircle, 
   Menu, 
   X,
-  Repeat
+  Repeat,
+  Users
 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
   const { currentUser, userProfile, isGuide, setRole, logout } = useAuth();
@@ -106,6 +108,15 @@ export default function Navbar() {
                 <Heart className="w-4 h-4" />
                 Wishlist
               </Link>
+              <Link
+                to="/guides"
+                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                  isActive('/guides') ? 'text-traveller-mint font-bold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Verified Guides
+              </Link>
             </>
           ) : (
             <>
@@ -149,6 +160,9 @@ export default function Navbar() {
 
         {/* Action Controls & Auth Dropdown */}
         <div className="flex items-center gap-3">
+          {/* Notification Bell */}
+          <NotificationBell />
+
           {/* Switch Role Button */}
           <button
             onClick={handlePortalSwitch}
@@ -273,6 +287,14 @@ export default function Navbar() {
               >
                 <Heart className="w-4 h-4 text-traveller-mint" />
                 Saved Wishlist
+              </Link>
+              <Link
+                to="/guides"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                <Users className="w-4 h-4 text-traveller-mint" />
+                Verified Guides
               </Link>
             </>
           ) : (
