@@ -39,7 +39,7 @@ export default function LoginPage() {
       const { user, profile } = await login(email, password, activeRole);
       
       if (activeRole === 'traveller') {
-        navigate('/explore');
+        navigate('/dashboard');
       } else {
         if (!profile?.onboardingComplete) {
           navigate('/guide/onboarding');

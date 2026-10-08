@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 
 // Traveller Flow
+import TravellerDashboardPage from './pages/traveller/TravellerDashboardPage';
 import ExploreHomePage from './pages/traveller/ExploreHomePage';
 import ExperienceDetailPage from './pages/traveller/ExperienceDetailPage';
 import TravellerBookingsPage from './pages/traveller/TravellerBookingsPage';
@@ -19,6 +20,7 @@ import GuidePublicProfilePage from './pages/traveller/GuidePublicProfilePage';
 // Guide Flow
 import GuideOnboardingPage from './pages/guide/GuideOnboardingPage';
 import GuideDashboardPage from './pages/guide/GuideDashboardPage';
+import GuideExperiencesPage from './pages/guide/GuideExperiencesPage';
 import CreateEditExperiencePage from './pages/guide/CreateEditExperiencePage';
 import GuideBookingsPage from './pages/guide/GuideBookingsPage';
 import GuideProfilePage from './pages/guide/GuideProfilePage';
@@ -50,6 +52,7 @@ function AppRoutes() {
       <Route path="/signup" element={<SignupPage />} />
 
       {/* Traveller Routes */}
+      <Route path="/dashboard" element={<TravellerRoute><TravellerDashboardPage /></TravellerRoute>} />
       <Route path="/explore" element={<ExploreHomePage />} />
       <Route path="/experience/:id" element={<ExperienceDetailPage />} />
       <Route path="/guides" element={<VerifiedGuidesPage />} />
@@ -61,7 +64,7 @@ function AppRoutes() {
       {/* Guide Routes */}
       <Route path="/guide/onboarding" element={<GuideRoute><GuideOnboardingPage /></GuideRoute>} />
       <Route path="/guide/dashboard" element={<GuideRoute><GuideDashboardPage /></GuideRoute>} />
-      <Route path="/guide/experiences" element={<GuideRoute><GuideDashboardPage /></GuideRoute>} />
+      <Route path="/guide/experiences" element={<GuideRoute><GuideExperiencesPage /></GuideRoute>} />
       <Route path="/guide/create-experience" element={<GuideRoute><CreateEditExperiencePage /></GuideRoute>} />
       <Route path="/guide/edit-experience/:id" element={<GuideRoute><CreateEditExperiencePage /></GuideRoute>} />
       <Route path="/guide/bookings" element={<GuideRoute><GuideBookingsPage /></GuideRoute>} />

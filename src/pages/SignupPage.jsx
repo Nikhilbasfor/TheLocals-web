@@ -80,7 +80,7 @@ export default function SignupPage() {
       if (isGuide) {
         navigate('/guide/onboarding');
       } else {
-        navigate('/explore');
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error("Signup error:", err);

@@ -11,7 +11,11 @@ export default function RoleSelectionPage() {
   const handleSelectRole = (role) => {
     setRole(role);
     if (role === 'traveller') {
-      navigate('/explore');
+      if (currentUser) {
+        navigate('/dashboard');
+      } else {
+        navigate('/login?role=traveller');
+      }
     } else {
       if (currentUser) {
         if (!userProfile?.onboardingComplete) {

@@ -38,10 +38,29 @@ export default function GuidePublicProfilePage() {
 
     const fetchData = async () => {
       try {
-        const guideData = await userService.getGuideById(guideId);
-        setGuide(guideData);
+        let guideData = await userService.getGuideById(guideId);
+        const expData = await experienceService.getExperiencesByGuide(
+          guideId, 
+          guideData?.email || (guideId.includes('@') ? guideId : ''), 
+          guideData?.name || guideData?.fullName || guideId
+        );
 
-        const expData = await experienceService.getExperiencesByGuide(guideId);
+        if (!guideData && expData.length > 0) {
+          const first = expData[0];
+          guideData = {
+            uid: guideId,
+            name: first.guideName || 'Local Guide',
+            profilePicUrl: first.guideImage || '',
+            state: first.state || 'Himalayas',
+            city: first.city || '',
+            rating: first.guideRating || 5.0,
+            experienceYears: first.guideExperienceYears || 2,
+            verified: true,
+            bio: `Verified local guide for ${first.title} and authentic Himalayan expeditions.`
+          };
+        }
+
+        setGuide(guideData);
         setExperiences(expData);
       } catch (err) {
         console.error("Error loading guide public profile:", err);

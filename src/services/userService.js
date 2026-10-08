@@ -26,12 +26,30 @@ export const userService = {
     }, errorCallback);
   },
 
-  // Get a single guide's public profile by UID
+  // Get a single guide's public profile by UID or email
   getGuideById: async (uid) => {
     if (!uid) return null;
-    const docRef = doc(db, 'users', uid);
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) return null;
-    return { uid: snap.id, ...snap.data() };
+    try {
+      const docRef = doc(db, 'users', uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return { uid: snap.id, ...snap.data() };
+      }
+    } catch (e) {
+      console.warn("Direct doc lookup error:", e);
+    }
+
+    try {
+      const q = query(collection(db, 'users'), where('email', '==', uid));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const d = snap.docs[0];
+        return { uid: d.id, ...d.data() };
+      }
+    } catch (e) {
+      console.warn("User lookup by email query error:", e);
+    }
+
+    return null;
   }
 };

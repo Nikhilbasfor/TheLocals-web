@@ -2,9 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
+  Home,
   Compass, 
   Ticket, 
-  Heart, 
   User, 
   LayoutDashboard, 
   Layers, 
@@ -15,15 +15,15 @@ export default function BottomNav() {
   const { isGuide, currentUser } = useAuth();
 
   const travellerTabs = [
+    { label: 'Home', path: currentUser ? '/dashboard' : '/explore', icon: Home },
     { label: 'Explore', path: '/explore', icon: Compass },
-    { label: 'Bookings', path: '/bookings', icon: Ticket },
-    { label: 'Wishlist', path: '/wishlist', icon: Heart },
+    { label: 'Bookings', path: currentUser ? '/bookings' : '/login?role=traveller', icon: Ticket },
     { label: 'Profile', path: currentUser ? '/profile' : '/login?role=traveller', icon: User },
   ];
 
   const guideTabs = [
     { label: 'Dashboard', path: '/guide/dashboard', icon: LayoutDashboard },
-    { label: 'Expeditions', path: '/guide/experiences', icon: Layers },
+    { label: 'Experiences', path: '/guide/experiences', icon: Layers },
     { label: 'Bookings', path: '/guide/bookings', icon: CalendarCheck },
     { label: 'Profile', path: currentUser ? '/guide/profile' : '/login?role=guide', icon: User },
   ];
@@ -37,7 +37,7 @@ export default function BottomNav() {
           const Icon = tab.icon;
           return (
             <NavLink
-              key={tab.path}
+              key={tab.label + tab.path}
               to={tab.path}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-150 ${

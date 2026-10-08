@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
+  Home,
   Compass, 
   Ticket, 
   Heart, 
@@ -28,7 +29,7 @@ export default function Navbar() {
   const handlePortalSwitch = () => {
     if (isGuide) {
       setRole('traveller');
-      navigate('/explore');
+      navigate(currentUser ? '/dashboard' : '/explore');
     } else {
       setRole('guide');
       if (currentUser) {
@@ -54,12 +55,17 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
+  // Determine home link
+  const homePath = isGuide 
+    ? "/guide/dashboard" 
+    : (currentUser ? "/dashboard" : "/");
+
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-cardBorder">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand / Logo */}
-        <Link to={isGuide ? "/guide/dashboard" : "/explore"} className="flex items-center gap-3 group">
+        {/* Brand / Logo (Links to Dashboard as requested) */}
+        <Link to={homePath} className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-full overflow-hidden p-1 bg-white shadow-sm border border-neutral-200 group-hover:scale-105 transition-transform">
             <img src="/app_logo.png" alt="The Locals" className="w-full h-full object-contain" />
           </div>
@@ -82,39 +88,48 @@ export default function Navbar() {
           {!isGuide ? (
             <>
               <Link
-                to="/explore"
+                to="/dashboard"
                 className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/explore') ? 'text-traveller-mint font-bold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                  isActive('/dashboard') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Compass className="w-4 h-4" />
+                <Home className="w-4 h-4 text-traveller-mint" />
+                Dashboard
+              </Link>
+              <Link
+                to="/explore"
+                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                  isActive('/explore') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                }`}
+              >
+                <Compass className="w-4 h-4 text-traveller-mint" />
                 Explore
               </Link>
               <Link
                 to="/bookings"
                 className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/bookings') ? 'text-traveller-mint font-bold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                  isActive('/bookings') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Ticket className="w-4 h-4" />
+                <Ticket className="w-4 h-4 text-traveller-mint" />
                 Bookings
               </Link>
               <Link
                 to="/wishlist"
                 className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/wishlist') ? 'text-traveller-mint font-bold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                  isActive('/wishlist') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Heart className="w-4 h-4" />
+                <Heart className="w-4 h-4 text-red-500" />
                 Wishlist
               </Link>
               <Link
                 to="/guides"
                 className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/guides') ? 'text-traveller-mint font-bold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                  isActive('/guides') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 text-indigo-700" />
                 Verified Guides
               </Link>
             </>
@@ -136,7 +151,7 @@ export default function Navbar() {
                 }`}
               >
                 <Layers className="w-4 h-4" />
-                My Expeditions
+                Experiences
               </Link>
               <Link
                 to="/guide/bookings"
@@ -265,6 +280,14 @@ export default function Navbar() {
           {!isGuide ? (
             <>
               <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                <Home className="w-4 h-4 text-traveller-mint" />
+                Dashboard
+              </Link>
+              <Link
                 to="/explore"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
@@ -285,7 +308,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                <Heart className="w-4 h-4 text-traveller-mint" />
+                <Heart className="w-4 h-4 text-red-500" />
                 Saved Wishlist
               </Link>
               <Link
@@ -293,7 +316,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                <Users className="w-4 h-4 text-traveller-mint" />
+                <Users className="w-4 h-4 text-indigo-700" />
                 Verified Guides
               </Link>
             </>
@@ -313,7 +336,7 @@ export default function Navbar() {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
                 <Layers className="w-4 h-4 text-guide-cyan" />
-                My Expeditions
+                Experiences
               </Link>
               <Link
                 to="/guide/bookings"
