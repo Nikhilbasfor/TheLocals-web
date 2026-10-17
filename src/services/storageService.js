@@ -8,9 +8,21 @@ export const storageService = {
     const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const storageRef = ref(storage, `${pathPrefix}/${filename}`);
     
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(snapshot.ref);
-    return downloadUrl;
+    try {
+      const metadata = { contentType: file.type || 'application/octet-stream' };
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      return downloadUrl;
+    } catch (err) {
+      console.error("Firebase Storage Upload Error:", err);
+      if (err.code === 'storage/unauthorized') {
+        throw new Error("Permission Denied (storage/unauthorized): Firebase Storage Security Rules blocked this upload. In Firebase Console > Storage > Rules, make sure rules allow write (e.g. 'allow read, write: if true;' or 'if request.auth != null;').");
+      }
+      if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+        throw new Error("Browser CORS Blocked: Google Cloud Storage requires CORS to be enabled for web uploads. See console for details or paste an image/PDF URL directly.");
+      }
+      throw err;
+    }
   },
 
   // Upload multiple images concurrently

@@ -80,6 +80,8 @@ export default function CreateEditExperiencePage() {
   // Media
   const [coverImage, setCoverImage] = useState('');
   const [galleryImages, setGalleryImages] = useState([]);
+  const [customCoverUrl, setCustomCoverUrl] = useState('');
+  const [customGalleryUrl, setCustomGalleryUrl] = useState('');
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
 
@@ -136,13 +138,15 @@ export default function CreateEditExperiencePage() {
 
   // Cover Image Upload
   const handleCoverUpload = async (file) => {
-    if (!file || !currentUser) return;
+    if (!file) return;
     setUploadingCover(true);
     try {
-      const url = await storageService.uploadFile(file, `experiences/${currentUser.uid}/cover`);
+      const uid = currentUser?.uid || 'guide_uploads';
+      const url = await storageService.uploadFile(file, `experiences/${uid}/cover`);
       setCoverImage(url);
     } catch (err) {
-      alert("Failed to upload cover: " + err.message);
+      console.error("Cover upload error:", err);
+      alert(err.message || "Failed to upload cover photo. You can also paste an image URL directly.");
     } finally {
       setUploadingCover(false);
     }
@@ -150,13 +154,15 @@ export default function CreateEditExperiencePage() {
 
   // Gallery Upload
   const handleGalleryUpload = async (files) => {
-    if (!files || files.length === 0 || !currentUser) return;
+    if (!files || files.length === 0) return;
     setUploadingGallery(true);
     try {
-      const urls = await storageService.uploadMultipleFiles(files, `experiences/${currentUser.uid}/gallery`);
+      const uid = currentUser?.uid || 'guide_uploads';
+      const urls = await storageService.uploadMultipleFiles(files, `experiences/${uid}/gallery`);
       setGalleryImages(prev => [...prev, ...urls]);
     } catch (err) {
-      alert("Failed to upload gallery: " + err.message);
+      console.error("Gallery upload error:", err);
+      alert(err.message || "Failed to upload gallery photos. You can also paste image URLs directly.");
     } finally {
       setUploadingGallery(false);
     }
@@ -164,18 +170,20 @@ export default function CreateEditExperiencePage() {
 
   // PDF Upload handler
   const handlePdfUpload = async (file) => {
-    if (!file || !currentUser) return;
+    if (!file) return;
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      alert("Please upload a valid PDF document.");
+      alert("Please upload a valid PDF document (.pdf).");
       return;
     }
     setUploadingPdf(true);
     try {
-      const url = await storageService.uploadFile(file, `experiences/${currentUser.uid}/itinerary_pdfs`);
+      const uid = currentUser?.uid || 'guide_uploads';
+      const url = await storageService.uploadFile(file, `experiences/${uid}/itinerary_pdfs`);
       setPdfUrl(url);
       setPdfName(file.name);
     } catch (err) {
-      alert("Failed to upload PDF: " + err.message);
+      console.error("PDF upload error:", err);
+      alert(err.message || "Failed to upload PDF. You can also paste an itinerary PDF URL directly below.");
     } finally {
       setUploadingPdf(false);
     }
@@ -369,14 +377,22 @@ export default function CreateEditExperiencePage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">State / Territory</label>
-                <select
+                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">State / Region / Country</label>
+                <input
+                  type="text"
+                  list="states-regions-list"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
+                  placeholder="e.g. Nepal, Nagaland, Himachal, Bhutan"
                   className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
-                >
-                  {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  required
+                />
+                <datalist id="states-regions-list">
+                  <option value="Nepal" />
+                  <option value="Bhutan" />
+                  <option value="Tibet" />
+                  {INDIAN_STATES.map(s => <option key={s} value={s} />)}
+                </datalist>
               </div>
 
               <div>
@@ -449,11 +465,19 @@ export default function CreateEditExperiencePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Cover Photo */}
-              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3">
+              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3 bg-neutral-50/40">
                 <span className="text-xs font-bold text-neutral-700 block">Cover Image</span>
                 {coverImage ? (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200 group">
                     <img src={coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setCoverImage('')}
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-rose-600 transition-colors"
+                      title="Remove Cover Photo"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 ) : (
                   <div className="py-4">
@@ -461,26 +485,88 @@ export default function CreateEditExperiencePage() {
                     <p className="text-[11px] text-neutral-400">High-res landscape photograph</p>
                   </div>
                 )}
-                <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
-                  {uploadingCover ? 'Uploading...' : 'Upload Cover Photo'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCoverUpload(e.target.files?.[0])} />
-                </label>
+                
+                <div className="space-y-2">
+                  <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
+                    {uploadingCover ? 'Uploading...' : 'Upload Cover Photo'}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCoverUpload(e.target.files?.[0])} />
+                  </label>
+
+                  <div className="flex gap-1.5 pt-1">
+                    <input
+                      type="url"
+                      placeholder="Or paste cover image URL..."
+                      value={customCoverUrl}
+                      onChange={(e) => setCustomCoverUrl(e.target.value)}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg border border-neutral-200 text-[11px] bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (customCoverUrl.trim()) {
+                          setCoverImage(customCoverUrl.trim());
+                          setCustomCoverUrl('');
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-900 text-white text-[11px] font-bold"
+                    >
+                      Set
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Gallery Photos */}
-              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3">
+              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3 bg-neutral-50/40">
                 <span className="text-xs font-bold text-neutral-700 block">Gallery Photos ({galleryImages.length})</span>
                 <div className="flex gap-2 overflow-x-auto py-2 no-scrollbar min-h-[60px]">
-                  {galleryImages.map((img, i) => (
-                    <div key={i} className="relative w-16 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-neutral-200">
-                      <img src={img} alt="Gallery" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+                  {galleryImages.length === 0 ? (
+                    <span className="text-[11px] text-neutral-400 m-auto">No gallery photos added yet</span>
+                  ) : (
+                    galleryImages.map((img, i) => (
+                      <div key={i} className="relative w-16 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-neutral-200 group">
+                        <img src={img} alt="Gallery" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setGalleryImages(prev => prev.filter((_, idx) => idx !== i))}
+                          className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                          title="Remove Photo"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-300" />
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
-                  {uploadingGallery ? 'Uploading...' : 'Add Gallery Photos'}
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleGalleryUpload(e.target.files)} />
-                </label>
+
+                <div className="space-y-2">
+                  <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
+                    {uploadingGallery ? 'Uploading...' : 'Add Gallery Photos'}
+                    <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleGalleryUpload(e.target.files)} />
+                  </label>
+
+                  <div className="flex gap-1.5 pt-1">
+                    <input
+                      type="url"
+                      placeholder="Or paste gallery image URL..."
+                      value={customGalleryUrl}
+                      onChange={(e) => setCustomGalleryUrl(e.target.value)}
+                      className="flex-1 px-2.5 py-1.5 rounded-lg border border-neutral-200 text-[11px] bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (customGalleryUrl.trim()) {
+                          setGalleryImages(prev => [...prev, customGalleryUrl.trim()]);
+                          setCustomGalleryUrl('');
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-900 text-white text-[11px] font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
