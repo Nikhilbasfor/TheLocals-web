@@ -26,7 +26,10 @@ import {
   Activity, 
   Calendar,
   CreditCard,
-  Loader2
+  Loader2,
+  FileText,
+  FileDown,
+  ExternalLink
 } from 'lucide-react';
 
 export default function ExperienceDetailPage() {
@@ -292,70 +295,77 @@ export default function ExperienceDetailPage() {
               </p>
             </div>
 
-            {/* Inclusions & Exclusions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Inclusions */}
-              <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-3">
-                <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  What's Included
-                </h4>
-                <ul className="space-y-2 text-xs text-neutral-600">
-                  {(experience.inclusions && experience.inclusions.length > 0) ? (
-                    experience.inclusions.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        <span>Certified local mountain guide</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        <span>Camp accommodation & sleeping gear</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                        <span>Wholesome local mountain meals</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
+            {/* Official Itinerary Brochure (PDF) Card */}
+            {experience.pdfUrl && (
+              <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-900 via-teal-950 to-neutral-900 text-white shadow-lg space-y-4 border border-emerald-500/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        Official Verified Document
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-white flex items-center gap-2 font-sans">
+                      <FileText className="w-5 h-5 text-emerald-400" />
+                      {experience.pdfName || 'Complete Itinerary Brochure (PDF)'}
+                    </h3>
+                    <p className="text-xs text-neutral-300 max-w-xl leading-relaxed">
+                      All day-by-day itineraries, inclusions & exclusions, double/triple room sharing options, packing checklist, and local policies are detailed inside this official guide document.
+                    </p>
+                  </div>
+                  <a
+                    href={experience.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-neutral-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all flex-shrink-0"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    <span>View / Download PDF</span>
+                  </a>
+                </div>
               </div>
+            )}
 
-              {/* Exclusions */}
-              <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-3">
-                <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
-                  <CloseIcon className="w-4 h-4 text-red-500" />
-                  What's Excluded
-                </h4>
-                <ul className="space-y-2 text-xs text-neutral-600">
-                  {(experience.exclusions && experience.exclusions.length > 0) ? (
-                    experience.exclusions.map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <CloseIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <>
-                      <li className="flex items-start gap-2">
-                        <CloseIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-                        <span>Personal trekking clothing & boots</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CloseIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-                        <span>Travel insurance</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
+            {/* Inclusions & Exclusions (Shown when provided directly) */}
+            {((experience.inclusions && experience.inclusions.length > 0) || (experience.exclusions && experience.exclusions.length > 0)) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Inclusions */}
+                {experience.inclusions && experience.inclusions.length > 0 && (
+                  <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-3">
+                    <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600" />
+                      What's Included
+                    </h4>
+                    <ul className="space-y-2 text-xs text-neutral-600">
+                      {experience.inclusions.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Exclusions */}
+                {experience.exclusions && experience.exclusions.length > 0 && (
+                  <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs space-y-3">
+                    <h4 className="font-bold text-sm text-neutral-900 flex items-center gap-2">
+                      <CloseIcon className="w-4 h-4 text-red-500" />
+                      What's Excluded
+                    </h4>
+                    <ul className="space-y-2 text-xs text-neutral-600">
+                      {experience.exclusions.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CloseIcon className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Things to Carry */}
             {experience.thingsToCarry && experience.thingsToCarry.length > 0 && (
@@ -374,16 +384,18 @@ export default function ExperienceDetailPage() {
               </div>
             )}
 
-            {/* Day-by-Day Itinerary Timeline Section */}
-            <div className="space-y-4">
-              <h3 className="font-bold text-lg text-neutral-900 font-sans">
-                Day-by-Day Expedition Itinerary
-              </h3>
-              <ItineraryTimeline 
-                days={experience.days} 
-                legacyItinerary={experience.itinerary} 
-              />
-            </div>
+            {/* Day-by-Day Itinerary Timeline Section (Shown if provided in data) */}
+            {((experience.days && experience.days.length > 0) || (experience.itinerary && experience.itinerary.length > 0)) && (
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg text-neutral-900 font-sans">
+                  Day-by-Day Expedition Itinerary
+                </h3>
+                <ItineraryTimeline 
+                  days={experience.days} 
+                  legacyItinerary={experience.itinerary} 
+                />
+              </div>
+            )}
 
             {/* Route Pins & Waypoints Section */}
             {experience.routePins && experience.routePins.length > 0 && (
@@ -438,6 +450,18 @@ export default function ExperienceDetailPage() {
                 <CreditCard className="w-4 h-4" />
                 <span>Book This Expedition</span>
               </button>
+
+              {experience.pdfUrl && (
+                <a
+                  href={experience.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Download Itinerary (PDF)</span>
+                </a>
+              )}
 
               <p className="text-[11px] text-neutral-400 text-center leading-normal">
                 Direct booking with native guide. Free cancellation up to 7 days before trip date.
