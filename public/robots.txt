@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /bookings
+Disallow: /wishlist
+Disallow: /profile
+Disallow: /guide/
+
+# Google Search Console Sitemap
+Sitemap: https://www.thelocalsexp.com/sitemap.xml
