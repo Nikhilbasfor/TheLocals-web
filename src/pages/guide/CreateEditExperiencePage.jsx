@@ -30,29 +30,24 @@ import {
   Calendar,
   DollarSign,
   Package,
-  ShieldAlert
+  ShieldAlert,
+  ExternalLink
 } from 'lucide-react';
+import SearchableSelect from '../../components/common/SearchableSelect';
 
-const CATEGORIES = ['Trek', 'Cultural', 'Offbeat', 'Heritage', 'Camping', 'Expedition'];
-const INDIAN_STATES = [
-  'Nagaland',
-  'Arunachal Pradesh',
-  'Assam',
-  'Meghalaya',
-  'Sikkim',
-  'Uttarakhand',
-  'Himachal Pradesh',
-  'Ladakh',
-  'Jammu & Kashmir',
-  'Rajasthan',
-  'Kerala',
-  'Goa',
-  'Karnataka',
-  'Maharashtra',
-  'West Bengal',
-  'Manipur',
-  'Mizoram',
-  'Tripura'
+const CATEGORIES = ['Trek', 'Cultural', 'Offbeat', 'Heritage', 'Camping', 'Expedition', 'Wildlife', 'Spiritual'];
+const COUNTRIES = ['India', 'Nepal', 'Bhutan', 'Tibet', 'Sri Lanka'];
+const ALL_STATES = [
+  'Nagaland', 'Arunachal Pradesh', 'Assam', 'Meghalaya', 'Sikkim', 'Manipur', 'Mizoram', 'Tripura',
+  'Uttarakhand', 'Himachal Pradesh', 'Ladakh', 'Jammu & Kashmir',
+  'Rajasthan', 'Kerala', 'Goa', 'Karnataka', 'Maharashtra', 'West Bengal',
+  'Andhra Pradesh', 'Bihar', 'Chhattisgarh', 'Gujarat', 'Haryana', 'Jharkhand', 'Madhya Pradesh',
+  'Odisha', 'Punjab', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh',
+  'Delhi (NCT)', 'Andaman & Nicobar Islands', 'Chandigarh', 'Puducherry',
+  // Nepal Provinces
+  'Bagmati (Kathmandu)', 'Gandaki (Pokhara)', 'Karnali', 'Koshi', 'Lumbini', 'Madhesh', 'Sudurpashchim',
+  // Bhutan
+  'Paro', 'Thimphu', 'Punakha'
 ];
 
 export default function CreateEditExperiencePage() {
@@ -64,18 +59,20 @@ export default function CreateEditExperiencePage() {
   const [loading, setLoading] = useState(isEditing);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form Fields
+  // Form Fields (No hardcoded default numbers; clean empty state with faded placeholders)
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Cultural');
-  const [state, setState] = useState('Nagaland');
+  const [category, setCategory] = useState('');
+  const [country, setCountry] = useState('India');
+  const [state, setState] = useState('');
   const [city, setCity] = useState('');
-  const [price, setPrice] = useState(48999);
-  const [maxGroupSize, setMaxGroupSize] = useState(12);
-  const [durationDays, setDurationDays] = useState(7);
-  const [durationNights, setDurationNights] = useState(6);
+  const [price, setPrice] = useState('');
+  const [maxGroupSize, setMaxGroupSize] = useState('');
+  const [durationDays, setDurationDays] = useState('');
+  const [durationNights, setDurationNights] = useState('');
   const [fitnessLevel, setFitnessLevel] = useState('Moderate');
   const [meetingPoint, setMeetingPoint] = useState('');
+  const [meetingPointMapsUrl, setMeetingPointMapsUrl] = useState('');
 
   // Media
   const [coverImage, setCoverImage] = useState('');
@@ -96,7 +93,7 @@ export default function CreateEditExperiencePage() {
   const [routePins, setRoutePins] = useState([
     {
       id: 'pin_1',
-      name: 'Dimapur / Kohima Base',
+      name: '',
       type: 'start',
       address: '',
       googleMapsUrl: ''
@@ -112,15 +109,17 @@ export default function CreateEditExperiencePage() {
         if (data) {
           setTitle(data.title || '');
           setDescription(data.description || '');
-          setCategory(data.category || 'Cultural');
-          setState(data.state || 'Nagaland');
+          setCategory(data.category || '');
+          setCountry(data.country || 'India');
+          setState(data.state || '');
           setCity(data.city || '');
-          setPrice(data.price || 48999);
-          setMaxGroupSize(data.maxGroupSize || 12);
-          setDurationDays(data.durationDays || 7);
-          setDurationNights(data.durationNights || 6);
+          setPrice(data.price !== undefined && data.price !== null ? data.price : '');
+          setMaxGroupSize(data.maxGroupSize !== undefined && data.maxGroupSize !== null ? data.maxGroupSize : '');
+          setDurationDays(data.durationDays !== undefined && data.durationDays !== null ? data.durationDays : '');
+          setDurationNights(data.durationNights !== undefined && data.durationNights !== null ? data.durationNights : '');
           setFitnessLevel(data.fitnessLevel || 'Moderate');
           setMeetingPoint(data.meetingPoint || '');
+          setMeetingPointMapsUrl(data.meetingPointMapsUrl || '');
           setCoverImage(data.coverImage || (data.images?.[0] || ''));
           setGalleryImages(data.galleryImages || data.images || []);
           if (data.pdfUrl) setPdfUrl(data.pdfUrl);
@@ -234,17 +233,19 @@ export default function CreateEditExperiencePage() {
     setIsSubmitting(true);
     try {
       const payload = {
-        title,
-        description,
-        category,
-        state,
-        city,
+        title: title.trim(),
+        description: description.trim(),
+        category: category || 'Offbeat',
+        country: country || 'India',
+        state: state.trim(),
+        city: city.trim(),
         price: Number(price) || 0,
-        maxGroupSize: Number(maxGroupSize) || 8,
+        maxGroupSize: Number(maxGroupSize) || 10,
         durationDays: Number(durationDays) || 1,
         durationNights: Number(durationNights) || 0,
         fitnessLevel,
-        meetingPoint,
+        meetingPoint: meetingPoint.trim(),
+        meetingPointMapsUrl: meetingPointMapsUrl.trim() || (meetingPoint.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint.trim())}` : ''),
         coverImage: coverImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
         images: galleryImages.length > 0 ? galleryImages : [coverImage].filter(Boolean),
         galleryImages,
@@ -364,45 +365,51 @@ export default function CreateEditExperiencePage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">Category</label>
-                <select
+                <SearchableSelect
+                  label="Category *"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
-                >
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">State / Region / Country</label>
-                <input
-                  type="text"
-                  list="states-regions-list"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="e.g. Nepal, Nagaland, Himachal, Bhutan"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
-                  required
+                  onChange={setCategory}
+                  options={CATEGORIES}
+                  placeholder="Select Category"
+                  allowCustom={true}
                 />
-                <datalist id="states-regions-list">
-                  <option value="Nepal" />
-                  <option value="Bhutan" />
-                  <option value="Tibet" />
-                  {INDIAN_STATES.map(s => <option key={s} value={s} />)}
-                </datalist>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">Starting Base City / Hub</label>
+                <SearchableSelect
+                  label="Country *"
+                  value={country}
+                  onChange={setCountry}
+                  options={COUNTRIES}
+                  placeholder="Select or type country..."
+                  allowCustom={true}
+                />
+              </div>
+
+              <div>
+                <SearchableSelect
+                  label="State / Province *"
+                  value={state}
+                  onChange={setState}
+                  options={ALL_STATES}
+                  placeholder="Select or type state/province..."
+                  allowCustom={true}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">
+                  Starting Base City / Hub *
+                </label>
                 <input
                   type="text"
+                  required
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Kohima / Dimapur"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold"
+                  placeholder="e.g. Kohima, Pokhara, Rishikesh"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
                 />
               </div>
             </div>
@@ -412,11 +419,13 @@ export default function CreateEditExperiencePage() {
                 <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">Base Price (₹ / Person) *</label>
                 <input
                   type="number"
+                  required
                   min="0"
-                  step="100"
+                  step="any"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold"
+                  placeholder="e.g. 5000"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
                 />
               </div>
 
@@ -425,10 +434,11 @@ export default function CreateEditExperiencePage() {
                 <input
                   type="number"
                   min="1"
-                  max="50"
+                  max="100"
                   value={maxGroupSize}
                   onChange={(e) => setMaxGroupSize(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold"
+                  placeholder="e.g. 10"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
                 />
               </div>
 
@@ -439,7 +449,8 @@ export default function CreateEditExperiencePage() {
                   min="1"
                   value={durationDays}
                   onChange={(e) => setDurationDays(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold"
+                  placeholder="e.g. 5"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
                 />
               </div>
 
@@ -450,7 +461,8 @@ export default function CreateEditExperiencePage() {
                   min="0"
                   value={durationNights}
                   onChange={(e) => setDurationNights(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold"
+                  placeholder="e.g. 4"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
                 />
               </div>
             </div>
@@ -766,72 +778,142 @@ export default function CreateEditExperiencePage() {
             </div>
           </div>
 
-          {/* Section 4: Meeting Spot & Route Pins */}
+          {/* Section 4: Meeting Spot, Hotels & Google Maps */}
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-5 shadow-xs">
             <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-guide-navy" />
-              4. Meeting Point & Route Waypoints
+              4. Meeting Point, Hotels & Google Maps Locations
             </h3>
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">
-                Meeting Point / Pickup Spot
-              </label>
-              <input
-                type="text"
-                value={meetingPoint}
-                onChange={(e) => setMeetingPoint(e.target.value)}
-                placeholder="e.g. Dimapur Airport / Kohima Railway Station (As mentioned in PDF)"
-                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-800"
-              />
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">
+                  Meeting Point / Pickup Spot *
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={meetingPoint}
+                    onChange={(e) => {
+                      setMeetingPoint(e.target.value);
+                      if (!meetingPointMapsUrl || meetingPointMapsUrl.includes('google.com/maps')) {
+                        setMeetingPointMapsUrl(e.target.value.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value.trim())}` : '');
+                      }
+                    }}
+                    placeholder="e.g. Dimapur Airport / Kohima Clock Tower / Pokhara Lakeside"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-800 bg-white"
+                  />
+                  {meetingPoint.trim() && (
+                    <a
+                      href={meetingPointMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint.trim())}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors flex-shrink-0"
+                      title="Open and preview this spot on Google Maps"
+                    >
+                      <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Test on Google Maps 🗺️</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-500 mb-1">
+                  Google Maps Directions Link / Pin URL (Auto-Generated or Custom)
+                </label>
+                <input
+                  type="url"
+                  value={meetingPointMapsUrl}
+                  onChange={(e) => setMeetingPointMapsUrl(e.target.value)}
+                  placeholder="https://maps.google.com/?q=..."
+                  className="w-full px-4 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-700 bg-neutral-50"
+                />
+              </div>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-3 border-t border-neutral-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-neutral-700">Optional Map Waypoints</span>
-                  <p className="text-[11px] text-neutral-400">Pin key stopovers on Google Maps for travellers.</p>
+                  <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-guide-primary" />
+                    Key Stopovers, Hotels & Camps (Connected to Google Maps)
+                  </span>
+                  <p className="text-[11px] text-neutral-400">Add hotels, base camps, or sightseeing points. Travellers can click any spot to open it on Google Maps.</p>
                 </div>
                 <button
                   type="button"
                   onClick={addRoutePin}
-                  className="px-3 py-1 rounded-xl bg-cyan-50 text-guide-navy border border-cyan-200 font-bold text-xs flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-guide-navy border border-cyan-200 font-bold text-xs flex items-center gap-1 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Stop</span>
+                  <span>Add Location Pin</span>
                 </button>
               </div>
 
               {routePins.map((pin, pIdx) => (
-                <div key={pin.id || pIdx} className="p-3 rounded-2xl bg-neutral-50 border border-neutral-200 flex items-center gap-2.5">
-                  <select
-                    value={pin.type || 'stop'}
-                    onChange={(e) => updateRoutePinField(pIdx, 'type', e.target.value)}
-                    className="px-2 py-1 rounded-lg border border-neutral-200 text-xs font-bold bg-white"
-                  >
-                    <option value="start">Start / Pickup</option>
-                    <option value="stop">Sightseeing Stop</option>
-                    <option value="overnight">Overnight Camp / Stay</option>
-                    <option value="end">Drop-off / Departure</option>
-                  </select>
-
-                  <input
-                    type="text"
-                    value={pin.name}
-                    onChange={(e) => updateRoutePinField(pIdx, 'name', e.target.value)}
-                    placeholder="Spot Name (e.g. Dzukou Valley Base)"
-                    className="flex-1 px-3 py-1 rounded-lg border border-neutral-200 text-xs font-semibold bg-white"
-                  />
-
-                  {routePins.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeRoutePin(pIdx)}
-                      className="text-neutral-400 hover:text-red-500 p-1"
+                <div key={pin.id || pIdx} className="p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-2.5">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <select
+                      value={pin.type || 'stop'}
+                      onChange={(e) => updateRoutePinField(pIdx, 'type', e.target.value)}
+                      className="px-2.5 py-1.5 rounded-xl border border-neutral-200 text-xs font-bold bg-white"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                      <option value="start">🚩 Start / Pickup Spot</option>
+                      <option value="hotel">🏨 Hotel / Homestay</option>
+                      <option value="camp">⛺ Overnight Camp</option>
+                      <option value="stop">📸 Sightseeing / Waypoint</option>
+                      <option value="end">🏁 Drop-off / Departure</option>
+                    </select>
+
+                    <input
+                      type="text"
+                      value={pin.name}
+                      onChange={(e) => {
+                        updateRoutePinField(pIdx, 'name', e.target.value);
+                        if (!pin.googleMapsUrl || pin.googleMapsUrl.includes('google.com/maps')) {
+                          updateRoutePinField(pIdx, 'googleMapsUrl', e.target.value.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value.trim())}` : '');
+                        }
+                      }}
+                      placeholder="Location Name (e.g. Hotel Japfu Kohima, Dzukou Base Camp)"
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
+                    />
+
+                    {pin.name.trim() && (
+                      <a
+                        href={pin.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pin.name.trim())}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors flex-shrink-0"
+                        title="View on Google Maps"
+                      >
+                        <ExternalLink className="w-3 h-3 text-emerald-600" />
+                        <span>Map 📍</span>
+                      </a>
+                    )}
+
+                    {routePins.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeRoutePin(pIdx)}
+                        className="text-neutral-400 hover:text-red-500 p-1.5 self-center"
+                        title="Remove Location"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="url"
+                      value={pin.googleMapsUrl || ''}
+                      onChange={(e) => updateRoutePinField(pIdx, 'googleMapsUrl', e.target.value)}
+                      placeholder="Google Maps link: https://maps.google.com/?q=... (Auto-filled or paste exact link)"
+                      className="flex-1 px-3 py-1 rounded-lg border border-neutral-200 text-[11px] text-neutral-600 bg-white"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

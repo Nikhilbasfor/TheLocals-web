@@ -29,7 +29,8 @@ import {
   Loader2,
   FileText,
   FileDown,
-  ExternalLink
+  ExternalLink,
+  Navigation
 } from 'lucide-react';
 
 export default function ExperienceDetailPage() {
@@ -284,6 +285,38 @@ export default function ExperienceDetailPage() {
                 View Host Profile &gt;
               </span>
             </Link>
+
+            {/* Meeting Point & Google Maps Interactive Card */}
+            {(experience.meetingPoint || experience.meetingPointMapsUrl || experience.city) && (
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white border border-emerald-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                      Starting Hub & Pickup Spot
+                    </span>
+                    <h4 className="font-extrabold text-sm text-neutral-900 mt-1">
+                      {experience.meetingPoint || `${experience.city}, ${experience.state}`}
+                    </h4>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Base Location: {[experience.city, experience.state, experience.country].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href={experience.meetingPointMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(experience.meetingPoint || `${experience.city}, ${experience.state}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all flex-shrink-0"
+                >
+                  <Navigation className="w-4 h-4" />
+                  <span>Open in Google Maps 📍</span>
+                </a>
+              </div>
+            )}
 
             {/* Description / Story */}
             <div className="space-y-3 bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-xs">
