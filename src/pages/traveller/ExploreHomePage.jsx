@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = ['All', 'Trek', 'Cultural', 'Offbeat', 'Heritage', 'Camping', 'Expedition'];
-const POPULAR_DESTINATIONS = ['All', 'Uttarakhand', 'Himachal Pradesh', 'Ladakh', 'Jammu & Kashmir', 'Sikkim'];
+const POPULAR_DESTINATIONS = ['All', 'Nepal', 'Uttarakhand', 'Himachal Pradesh', 'Ladakh', 'Sikkim', 'Nagaland', 'Meghalaya', 'Jammu & Kashmir', 'Bhutan'];
 
 export default function ExploreHomePage() {
   const [searchParams] = useSearchParams();
@@ -35,7 +35,7 @@ export default function ExploreHomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
   const [selectedState, setSelectedState] = useState(searchParams.get('state') || 'All');
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxPrice, setMaxPrice] = useState(100000);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   // Subscribe to real-time experiences from Firestore
@@ -75,7 +75,8 @@ export default function ExploreHomePage() {
       exp.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exp.state?.toLowerCase().includes(searchTerm.toLowerCase());
+      exp.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exp.country?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory = 
       selectedCategory === 'All' || 
@@ -83,7 +84,8 @@ export default function ExploreHomePage() {
 
     const matchesState = 
       selectedState === 'All' || 
-      exp.state?.toLowerCase() === selectedState.toLowerCase();
+      exp.state?.toLowerCase() === selectedState.toLowerCase() ||
+      exp.country?.toLowerCase() === selectedState.toLowerCase();
 
     const matchesPrice = !maxPrice || Number(exp.price || 0) <= maxPrice;
 

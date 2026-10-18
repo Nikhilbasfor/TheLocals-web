@@ -4,6 +4,7 @@ import Navbar from '../../components/common/Navbar';
 import BottomNav from '../../components/common/BottomNav';
 import Footer from '../../components/common/Footer';
 import TravelPatternBackground from '../../components/common/TravelPatternBackground';
+import SearchableSelect from '../../components/common/SearchableSelect';
 import { useAuth } from '../../context/AuthContext';
 import { storageService } from '../../services/storageService';
 import { 
@@ -21,18 +22,46 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const INDIAN_STATES = [
-  'Uttarakhand',
-  'Himachal Pradesh',
-  'Ladakh',
-  'Jammu & Kashmir',
-  'Sikkim',
-  'Rajasthan',
-  'Kerala',
+const ALL_REGIONS = [
+  'Nepal',
+  'Bhutan',
+  'Tibet',
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
   'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
   'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
   'Maharashtra',
-  'West Bengal'
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi (NCT)',
+  'Jammu & Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry'
 ];
 
 const SPECIALTY_OPTIONS = [
@@ -57,10 +86,10 @@ export default function GuideOnboardingPage() {
   // Form State
   const [fullName, setFullName] = useState(userProfile?.name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
-  const [state, setState] = useState(userProfile?.state || 'Uttarakhand');
+  const [state, setState] = useState(userProfile?.state || '');
   const [city, setCity] = useState(userProfile?.city || '');
   
-  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || 2);
+  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || '');
   const [specialties, setSpecialties] = useState(userProfile?.specialties || []);
   const [languages, setLanguages] = useState(userProfile?.languages || ['Hindi', 'English']);
   
@@ -68,7 +97,7 @@ export default function GuideOnboardingPage() {
   const [aadhaarFrontUrl, setAadhaarFrontUrl] = useState(userProfile?.aadhaarFrontUrl || '');
   const [aadhaarBackUrl, setAadhaarBackUrl] = useState(userProfile?.aadhaarBackUrl || '');
   
-  const [birthState, setBirthState] = useState(userProfile?.birthState || 'Uttarakhand');
+  const [birthState, setBirthState] = useState(userProfile?.birthState || '');
   const [bio, setBio] = useState(userProfile?.bio || '');
 
   const [uploadingFront, setUploadingFront] = useState(false);
@@ -213,18 +242,13 @@ export default function GuideOnboardingPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Operating State *</label>
-              <select
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white"
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Operating State / Region *"
+              options={ALL_REGIONS}
+              value={state}
+              onChange={setState}
+              placeholder="Search or enter operating state/region (e.g. Nepal, Himachal, Sikkim)..."
+            />
 
             <div className="pt-4 flex justify-end">
               <button
@@ -232,6 +256,10 @@ export default function GuideOnboardingPage() {
                 onClick={() => {
                   if (!fullName || !phone) {
                     alert("Please fill your full legal name and phone.");
+                    return;
+                  }
+                  if (!state) {
+                    alert("Please select or enter your operating state/region.");
                     return;
                   }
                   setCurrentStep(2);
@@ -258,6 +286,7 @@ export default function GuideOnboardingPage() {
                 max="45"
                 value={experienceYears}
                 onChange={(e) => setExperienceYears(e.target.value)}
+                placeholder="e.g. 3"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
               />
             </div>
@@ -397,20 +426,13 @@ export default function GuideOnboardingPage() {
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
-                Native State / Homeland Roots *
-              </label>
-              <select
-                value={birthState}
-                onChange={(e) => setBirthState(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white"
-              >
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Native State / Homeland Roots *"
+              options={ALL_REGIONS}
+              value={birthState}
+              onChange={setBirthState}
+              placeholder="Search or enter homeland roots (e.g. Nepal, Ladakh, Uttarakhand)..."
+            />
 
             <div>
               <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">

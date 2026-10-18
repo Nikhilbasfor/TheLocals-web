@@ -17,13 +17,18 @@ const BOOKINGS_COL = 'bookings';
 export const bookingService = {
   // Create a new booking
   createBooking: async (bookingData) => {
+    const guests = Number(bookingData.guestCount || bookingData.numberOfTravelers) || 1;
+    const date = bookingData.startDate || bookingData.bookingDate || '';
     const cleanData = {
       ...bookingData,
+      startDate: date,
+      bookingDate: date,
+      guestCount: guests,
+      numberOfTravelers: guests,
       status: bookingData.status || 'pending',
       paymentStatus: bookingData.paymentStatus || 'pending',
       paymentId: bookingData.paymentId || '',
       createdAt: Date.now(),
-      guestCount: Number(bookingData.guestCount) || 1,
       totalPrice: Number(bookingData.totalPrice) || 0,
     };
     const docRef = await addDoc(collection(db, BOOKINGS_COL), cleanData);

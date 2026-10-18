@@ -167,11 +167,11 @@ export default function GuideBookingsPage() {
                     <span className="font-bold text-neutral-400 uppercase text-[10px] block">Schedule</span>
                     <p className="flex items-center gap-1.5 font-semibold text-neutral-800">
                       <Calendar className="w-3.5 h-3.5 text-guide-navy" />
-                      Date: {b.startDate || 'Coordinated'}
+                      Date: {b.startDate || b.bookingDate || 'Coordinated'}
                     </p>
                     <p className="flex items-center gap-1.5 text-neutral-600">
                       <Users className="w-3.5 h-3.5 text-neutral-500" />
-                      Party: {b.guestCount} {b.guestCount === 1 ? 'Explorer' : 'Explorers'}
+                      Party: {b.guestCount || b.numberOfTravelers || 1} {(b.guestCount || b.numberOfTravelers) === 1 ? 'Explorer' : 'Explorers'}
                     </p>
                   </div>
 

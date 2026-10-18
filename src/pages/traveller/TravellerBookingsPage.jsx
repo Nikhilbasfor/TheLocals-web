@@ -213,11 +213,11 @@ export default function TravellerBookingsPage() {
                     <div className="flex items-center gap-4 text-xs text-neutral-500 flex-wrap pt-1">
                       <span className="flex items-center gap-1 font-medium">
                         <Calendar className="w-3.5 h-3.5 text-traveller-mint" />
-                        {b.startDate || 'Date coordinated'}
+                        {b.startDate || b.bookingDate || 'Date coordinated'}
                       </span>
                       <span className="flex items-center gap-1 font-medium">
                         <Users className="w-3.5 h-3.5 text-sky-500" />
-                        {b.guestCount} {b.guestCount === 1 ? 'Guest' : 'Guests'}
+                        {b.guestCount || b.numberOfTravelers || 1} {(b.guestCount || b.numberOfTravelers) === 1 ? 'Guest' : 'Guests'}
                       </span>
                       <span className="text-neutral-400">
                         Host: <strong className="text-neutral-700">{b.guideName || 'Verified Guide'}</strong>
