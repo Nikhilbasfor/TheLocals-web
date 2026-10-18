@@ -80,7 +80,8 @@ export default function SignupPage() {
       if (isGuide) {
         navigate('/guide/onboarding');
       } else {
-        navigate('/dashboard');
+        const redirect = searchParams.get('redirect') || '/dashboard';
+        navigate(redirect);
       }
     } catch (err) {
       console.error("Signup error:", err);

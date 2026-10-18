@@ -48,8 +48,7 @@ export default function BookingModal({ experience, onClose }) {
   const handleBookingAndPayment = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      alert("Please sign in as a traveller to book an expedition.");
-      navigate('/login?role=traveller');
+      navigate('/login?role=traveller&redirect=' + encodeURIComponent(window.location.pathname));
       return;
     }
 

@@ -48,7 +48,8 @@ export default function LoginPage() {
       const { user, profile } = await login(email, password, activeRole);
       
       if (activeRole === 'traveller') {
-        navigate('/dashboard');
+        const redirect = searchParams.get('redirect') || '/dashboard';
+        navigate(redirect);
       } else {
         if (!profile?.onboardingComplete) {
           navigate('/guide/onboarding');

@@ -61,6 +61,16 @@ export default function ExperienceDetailPage() {
     return () => unsub();
   }, [id]);
 
+  // Dynamic SEO page title for Google & Social Shares
+  useEffect(() => {
+    if (experience?.title) {
+      document.title = `${experience.title} - ${experience.state || 'Himalayas'} | THE LOCALS`;
+    }
+    return () => {
+      document.title = 'THE LOCALS - Authentic Guided Himalayan Expeditions';
+    };
+  }, [experience]);
+
   // Wishlist state check
   useEffect(() => {
     if (!currentUser || !id) return;
