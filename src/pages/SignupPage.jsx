@@ -25,7 +25,7 @@ import {
 export default function SignupPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { signupWithPhoneOtp, setRole } = useAuth();
+  const { sendPhoneSms, confirmPhoneSignup, setRole } = useAuth();
 
   const roleParam = searchParams.get('role') || 'traveller';
   const [activeRole, setActiveRole] = useState(roleParam.toLowerCase());
@@ -44,7 +44,7 @@ export default function SignupPage() {
 
   // OTP Verification State
   const [otpSent, setOtpSent] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
   const [enteredOtp, setEnteredOtp] = useState('');
   const [otpSending, setOtpSending] = useState(false);
   
@@ -73,7 +73,7 @@ export default function SignupPage() {
     navigate(`/signup?role=${lower}`, { replace: true });
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!name || name.trim().length < 2) {
       setError("Please provide your full legal name.");
       return;
@@ -85,18 +85,25 @@ export default function SignupPage() {
     setError(null);
     setOtpSending(true);
 
-    setTimeout(() => {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
+    const clean = phoneNumber.trim().replace(/\D/g, '');
+    const fullPhone = `${countryCode}${clean}`;
+
+    try {
+      const conf = await sendPhoneSms(fullPhone, 'recaptcha-signup-container');
+      setConfirmationResult(conf);
       setOtpSent(true);
+    } catch (err) {
+      console.error("SMS send error:", err);
+      setError(err.message || "Failed to send SMS OTP. Please check your phone number.");
+    } finally {
       setOtpSending(false);
-    }, 600);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!enteredOtp || enteredOtp.trim() !== generatedOtp) {
-      setError('Invalid OTP code. Please enter the 6-digit code sent to your phone.');
+    if (!enteredOtp || enteredOtp.trim().length < 6) {
+      setError('Please enter the 6-digit SMS OTP code sent to your phone.');
       return;
     }
 
@@ -105,10 +112,11 @@ export default function SignupPage() {
     setIsLoading(true);
     setError(null);
 
-    const fullPhoneNumber = `${countryCode} ${phoneNumber.trim()}`;
+    const clean = phoneNumber.trim().replace(/\D/g, '');
+    const fullPhoneNumber = `${countryCode}${clean}`;
 
     try {
-      await signupWithPhoneOtp({
+      await confirmPhoneSignup(confirmationResult, enteredOtp.trim(), {
         name: name.trim(),
         phone: fullPhoneNumber,
         country,
@@ -418,10 +426,10 @@ export default function SignupPage() {
                 <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs space-y-1">
                   <div className="flex items-center gap-2 font-bold text-emerald-300">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>OTP Sent to {countryCode} {phoneNumber}</span>
+                    <span>SMS OTP Sent to {countryCode} {phoneNumber}</span>
                   </div>
                   <p className="text-[11px] text-white/80">
-                    Enter code <span className="font-mono font-black text-sm bg-black/40 px-2 py-0.5 rounded text-white tracking-widest">{generatedOtp}</span> to verify registration:
+                    Please enter the 6-digit verification code sent to your phone:
                   </p>
                 </div>
 
@@ -470,8 +478,20 @@ export default function SignupPage() {
                     )}
                   </button>
                 </div>
+
+                <button
+                  type="button"
+                  disabled={otpSending}
+                  onClick={handleSendOtp}
+                  className="w-full py-2 text-center text-xs font-semibold text-white/70 hover:text-white transition"
+                >
+                  {otpSending ? 'Sending New OTP...' : 'Resend Verification SMS OTP'}
+                </button>
               </div>
             )}
+
+            {/* Invisible Recaptcha Container for Signup */}
+            <div id="recaptcha-signup-container"></div>
           </form>
 
           {/* Switch to Login */}
