@@ -4,9 +4,18 @@ import Navbar from '../../components/common/Navbar';
 import BottomNav from '../../components/common/BottomNav';
 import Footer from '../../components/common/Footer';
 import TravelPatternBackground from '../../components/common/TravelPatternBackground';
-import SearchableSelect from '../../components/common/SearchableSelect';
 import { useAuth } from '../../context/AuthContext';
 import { storageService } from '../../services/storageService';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
+import { 
+  COUNTRY_LIST,
+  INDIAN_STATES_AND_UTS,
+  NEPAL_REGIONS,
+  BHUTAN_REGIONS,
+  STATE_CITIES_MAP,
+  EXPERIENCE_SPECIALTIES
+} from '../../data/geoData';
 import { 
   ShieldCheck, 
   Upload, 
@@ -19,61 +28,12 @@ import {
   ArrowRight, 
   ArrowLeft,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  X,
+  RefreshCw,
+  Lock
 } from 'lucide-react';
-
-const ALL_REGIONS = [
-  'Nepal',
-  'Bhutan',
-  'Tibet',
-  'Andhra Pradesh',
-  'Arunachal Pradesh',
-  'Assam',
-  'Bihar',
-  'Chhattisgarh',
-  'Goa',
-  'Gujarat',
-  'Haryana',
-  'Himachal Pradesh',
-  'Jharkhand',
-  'Karnataka',
-  'Kerala',
-  'Madhya Pradesh',
-  'Maharashtra',
-  'Manipur',
-  'Meghalaya',
-  'Mizoram',
-  'Nagaland',
-  'Odisha',
-  'Punjab',
-  'Rajasthan',
-  'Sikkim',
-  'Tamil Nadu',
-  'Telangana',
-  'Tripura',
-  'Uttar Pradesh',
-  'Uttarakhand',
-  'West Bengal',
-  'Andaman and Nicobar Islands',
-  'Chandigarh',
-  'Dadra and Nagar Haveli and Daman and Diu',
-  'Delhi (NCT)',
-  'Jammu & Kashmir',
-  'Ladakh',
-  'Lakshadweep',
-  'Puducherry'
-];
-
-const SPECIALTY_OPTIONS = [
-  'High Altitude Trekking',
-  'Alpine Flora & Foraging',
-  'Cultural & Heritage Walks',
-  'Bird Watching & Wildlife',
-  'Camping & Bushcraft',
-  'Rock Climbing & Mountaineering',
-  'River Rafting & Kayaking',
-  'Village Homestays & Cooking'
-];
 
 export default function GuideOnboardingPage() {
   const navigate = useNavigate();
@@ -85,12 +45,21 @@ export default function GuideOnboardingPage() {
 
   // Form State
   const [fullName, setFullName] = useState(userProfile?.name || '');
-  const [phone, setPhone] = useState(userProfile?.phone || '');
-  const [state, setState] = useState(userProfile?.state || '');
+  const [country, setCountry] = useState(userProfile?.country || 'India');
+  const [phoneCode, setPhoneCode] = useState('+91');
+  const [rawPhone, setRawPhone] = useState(() => {
+    const existing = userProfile?.phone || '';
+    return existing.replace(/^\+\d+\s*/, '');
+  });
+  const [state, setState] = useState(userProfile?.state || 'Uttarakhand');
   const [city, setCity] = useState(userProfile?.city || '');
+  const [customCity, setCustomCity] = useState('');
+  const [isCustomCity, setIsCustomCity] = useState(false);
   
-  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || '');
+  const [experienceYears, setExperienceYears] = useState(userProfile?.experienceYears || 2);
   const [specialties, setSpecialties] = useState(userProfile?.specialties || []);
+  const [customSpecialtyInput, setCustomSpecialtyInput] = useState('');
+  const [selectedSpecialtyDropdown, setSelectedSpecialtyDropdown] = useState('');
   const [languages, setLanguages] = useState(userProfile?.languages || ['Hindi', 'English']);
   
   const [aadhaarNumber, setAadhaarNumber] = useState(userProfile?.aadhaarNumber || '');
@@ -103,14 +72,41 @@ export default function GuideOnboardingPage() {
   const [uploadingFront, setUploadingFront] = useState(false);
   const [uploadingBack, setUploadingBack] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusChecking, setStatusChecking] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
   const [error, setError] = useState(null);
 
-  const toggleSpecialty = (item) => {
-    if (specialties.includes(item)) {
-      setSpecialties(specialties.filter(s => s !== item));
-    } else {
-      setSpecialties([...specialties, item]);
+  // Available states based on country
+  const availableStates = country === 'India'
+    ? INDIAN_STATES_AND_UTS
+    : country === 'Nepal'
+      ? NEPAL_REGIONS
+      : country === 'Bhutan'
+        ? BHUTAN_REGIONS
+        : ['Default Region'];
+
+  // Available cities based on selected state
+  const availableCities = STATE_CITIES_MAP[state] || [];
+
+  const handleAddSpecialtyFromDropdown = (e) => {
+    const val = e.target.value;
+    if (!val) return;
+    if (!specialties.includes(val)) {
+      setSpecialties([...specialties, val]);
     }
+    setSelectedSpecialtyDropdown('');
+  };
+
+  const handleAddCustomSpecialty = () => {
+    const trimmed = customSpecialtyInput.trim();
+    if (trimmed && !specialties.includes(trimmed)) {
+      setSpecialties([...specialties, trimmed]);
+      setCustomSpecialtyInput('');
+    }
+  };
+
+  const handleRemoveSpecialty = (item) => {
+    setSpecialties(specialties.filter((s) => s !== item));
   };
 
   const handleUploadAadhaar = async (file, side) => {
@@ -118,12 +114,16 @@ export default function GuideOnboardingPage() {
     try {
       if (side === 'front') setUploadingFront(true);
       else setUploadingBack(true);
-
-      const url = await storageService.uploadFile(file, `verification/${currentUser.uid}`);
-      if (side === 'front') setAadhaarFrontUrl(url);
-      else setAadhaarBackUrl(url);
+      
+      const downloadUrl = await storageService.uploadAadhaar(currentUser.uid, file, side);
+      if (side === 'front') {
+        setAadhaarFrontUrl(downloadUrl);
+      } else {
+        setAadhaarBackUrl(downloadUrl);
+      }
     } catch (err) {
-      alert("Failed to upload document: " + err.message);
+      console.error("KYC Upload error:", err);
+      alert("Failed to upload ID document. Please try again.");
     } finally {
       if (side === 'front') setUploadingFront(false);
       else setUploadingBack(false);
@@ -131,33 +131,74 @@ export default function GuideOnboardingPage() {
   };
 
   const handleSubmitVerification = async () => {
+    if (!aadhaarNumber || aadhaarNumber.length < 6) {
+      setError("Please provide a valid Government ID / Aadhaar number.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
+
+    const fullPhoneNumber = `${phoneCode} ${rawPhone.trim()}`;
+    const finalCity = isCustomCity ? customCity.trim() : city;
+
     try {
       await updateUserProfile({
-        name: fullName,
-        fullName: fullName,
-        phone,
+        name: fullName.trim(),
+        country,
+        phone: fullPhoneNumber,
         state,
-        city,
+        city: finalCity,
         experienceYears: Number(experienceYears) || 0,
         specialties,
         languages,
         aadhaarNumber,
         aadhaarFrontUrl,
         aadhaarBackUrl,
-        birthState,
-        bio,
-        role: 'guide',
+        birthState: birthState || state,
+        bio: bio.trim(),
         onboardingComplete: true,
-        verified: false, // under review by admin
+        verified: false,
+        isVerified: false,
+        submittedAt: Date.now()
       });
+
       setCurrentStep(5);
     } catch (err) {
-      console.error("KYC submission error:", err);
-      setError(err.message || "Failed to submit verification details.");
+      console.error("KYC Submit error:", err);
+      setError("Failed to submit verification. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Status check for locked step 5
+  const handleCheckStatus = async () => {
+    if (!currentUser) return;
+    setStatusChecking(true);
+    setStatusMessage(null);
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const isApproved = data.verified === true || data.isVerified === true;
+        if (isApproved) {
+          setStatusMessage({ type: 'success', text: 'Congratulations! Your guide profile has been approved! Redirecting to host dashboard...' });
+          setTimeout(() => {
+            navigate('/guide/dashboard');
+          }, 1500);
+        } else if (data.rejectionReason) {
+          setStatusMessage({ type: 'error', text: `Admin Revision Required: ${data.rejectionReason}` });
+        } else {
+          setStatusMessage({ type: 'pending', text: 'Verification in progress. Our safety team typically verifies documents within 24 hours.' });
+        }
+      }
+    } catch (err) {
+      console.error("Check status error:", err);
+      setStatusMessage({ type: 'error', text: 'Failed to refresh status. Please check your internet.' });
+    } finally {
+      setStatusChecking(false);
     }
   };
 
@@ -165,26 +206,33 @@ export default function GuideOnboardingPage() {
     <TravelPatternBackground>
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen pb-24 md:pb-16 space-y-8">
+      <main className="max-w-3xl mx-auto px-4 py-8 min-h-screen pb-24 md:pb-16">
         
-        {/* Step Indicator Header (Steps 1 to 4) */}
-        {currentStep <= 4 && (
-          <div className="space-y-4 text-center">
-            <span className="text-xs font-bold tracking-widest text-emerald-700 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 inline-block">
-              LOCAL HOST VERIFICATION • STEP {currentStep} OF 4
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black font-sans text-neutral-900">
-              {currentStep === 1 && "Personal & Base Location"}
-              {currentStep === 2 && "Guiding Skills & Expertise"}
-              {currentStep === 3 && "Government ID & KYC Verification"}
-              {currentStep === 4 && "Native Roots & Mountain Story"}
-            </h1>
-            <p className="text-xs text-neutral-500 max-w-md mx-auto">
-              The Locals prioritizes safety and local heritage by verifying all mountain leads.
-            </p>
+        {/* Onboarding Wizard Header */}
+        <div className="text-center mb-8 space-y-2">
+          <span className="text-[11px] font-extrabold tracking-widest text-guide-primary uppercase bg-guide-skyBlue px-3.5 py-1 rounded-full border border-guide-primary/20 inline-block">
+            HOST ONBOARDING PORTAL
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black font-sans text-neutral-900">
+            {currentStep === 5 ? 'KYC Verification Status' : 'Guide Registration & Verification'}
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto">
+            {currentStep === 5 
+              ? 'Your account is under community safety review before host features unlock.'
+              : 'Join our certified local community. Step-by-step verified onboarding.'}
+          </p>
+        </div>
 
-            {/* Stepper dots */}
-            <div className="flex items-center justify-center gap-2 pt-2">
+        {/* Step Progress Pills (Only on steps 1-4) */}
+        {currentStep < 5 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between text-xs font-bold text-neutral-400 mb-2">
+              <span className={currentStep >= 1 ? 'text-guide-primary' : ''}>1. Location & Bio</span>
+              <span className={currentStep >= 2 ? 'text-guide-primary' : ''}>2. Experience</span>
+              <span className={currentStep >= 3 ? 'text-guide-primary' : ''}>3. KYC Documents</span>
+              <span className={currentStep >= 4 ? 'text-guide-primary' : ''}>4. Review</span>
+            </div>
+            <div className="flex gap-2">
               {[1, 2, 3, 4].map((step) => (
                 <div
                   key={step}
@@ -201,7 +249,15 @@ export default function GuideOnboardingPage() {
           </div>
         )}
 
-        {/* Step 1: Personal Info */}
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Step 1: Personal Info & Cascading Location */}
         {currentStep === 1 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 shadow-sm space-y-4">
             <div>
@@ -216,50 +272,135 @@ export default function GuideOnboardingPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Phone Number *</label>
+            {/* Country Selector */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Country *</label>
+              <select
+                value={country}
+                onChange={(e) => {
+                  const newCountry = e.target.value;
+                  setCountry(newCountry);
+                  const matched = COUNTRY_LIST.find((c) => c.name === newCountry);
+                  if (matched) setPhoneCode(matched.dialCode);
+                  if (newCountry === 'India') setState('Uttarakhand');
+                  else if (newCountry === 'Nepal') setState(NEPAL_REGIONS[0]);
+                  else if (newCountry === 'Bhutan') setState(BHUTAN_REGIONS[0]);
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white font-medium"
+              >
+                {COUNTRY_LIST.map((c) => (
+                  <option key={c.name} value={c.name}>
+                    {c.flag} {c.name} ({c.dialCode})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Phone Number with Country Code Dropdown */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Phone Number *</label>
+              <div className="flex gap-2">
+                <select
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value)}
+                  className="w-32 px-2.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-neutral-50 font-bold"
+                >
+                  {COUNTRY_LIST.map((c) => (
+                    <option key={c.dialCode + c.code} value={c.dialCode}>
+                      {c.flag} {c.dialCode}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="tel"
                   required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Base Town / Village *</label>
-                <input
-                  type="text"
-                  required
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Sankri, Joshimath, Leh"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
+                  value={rawPhone}
+                  onChange={(e) => setRawPhone(e.target.value)}
+                  placeholder="98765 43210"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
                 />
               </div>
             </div>
 
-            <SearchableSelect
-              label="Operating State / Region *"
-              options={ALL_REGIONS}
-              value={state}
-              onChange={setState}
-              placeholder="Search or enter operating state/region (e.g. Nepal, Himachal, Sikkim)..."
-            />
+            {/* Cascading State & City Dropdowns */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Operating State / Region *</label>
+                <select
+                  value={state}
+                  onChange={(e) => {
+                    const newState = e.target.value;
+                    setState(newState);
+                    const cities = STATE_CITIES_MAP[newState] || [];
+                    if (cities.length > 0) {
+                      setCity(cities[0]);
+                      setIsCustomCity(false);
+                    } else {
+                      setIsCustomCity(true);
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white"
+                >
+                  {availableStates.map((st) => (
+                    <option key={st} value={st}>{st}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">Base Town / Village *</label>
+                {!isCustomCity && availableCities.length > 0 ? (
+                  <select
+                    value={city}
+                    onChange={(e) => {
+                      if (e.target.value === '__OTHER__') {
+                        setIsCustomCity(true);
+                        setCustomCity('');
+                      } else {
+                        setCity(e.target.value);
+                      }
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white"
+                  >
+                    {availableCities.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                    <option value="__OTHER__">+ Other Base Town (Type below)</option>
+                  </select>
+                ) : (
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      required
+                      value={customCity}
+                      onChange={(e) => setCustomCity(e.target.value)}
+                      placeholder="Enter base town or village name"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
+                    />
+                    {availableCities.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomCity(false)}
+                        className="text-[11px] text-guide-primary hover:underline"
+                      >
+                        Choose from state city dropdown
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="pt-4 flex justify-end">
               <button
                 type="button"
                 onClick={() => {
-                  if (!fullName || !phone) {
-                    alert("Please fill your full legal name and phone.");
+                  if (!fullName.trim() || !rawPhone.trim()) {
+                    alert("Please provide your full legal name and phone number.");
                     return;
                   }
-                  if (!state) {
-                    alert("Please select or enter your operating state/region.");
+                  if (isCustomCity && !customCity.trim()) {
+                    alert("Please provide your base town name.");
                     return;
                   }
                   setCurrentStep(2);
@@ -273,7 +414,7 @@ export default function GuideOnboardingPage() {
           </div>
         )}
 
-        {/* Step 2: Experience & Specialties */}
+        {/* Step 2: Experience & Specialties (Requirement 13) */}
         {currentStep === 2 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 shadow-sm space-y-6">
             <div>
@@ -291,29 +432,81 @@ export default function GuideOnboardingPage() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-2">
-                Your Guiding Specialties (Choose all that apply)
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {SPECIALTY_OPTIONS.map((spec) => {
-                  const isChecked = specialties.includes(spec);
-                  return (
-                    <button
-                      type="button"
-                      key={spec}
-                      onClick={() => toggleSpecialty(spec)}
-                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between ${
-                        isChecked 
-                          ? 'border-guide-primary bg-guide-skyBlue text-guide-navy shadow-xs font-bold' 
-                          : 'border-neutral-200 hover:border-neutral-300 text-neutral-700'
-                      }`}
-                    >
-                      <span>{spec}</span>
-                      {isChecked && <CheckCircle2 className="w-4 h-4 text-guide-primary flex-shrink-0" />}
-                    </button>
-                  );
-                })}
+            {/* Experience-oriented Specialties Dropdown & Tag List */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
+                  Guiding Specialties (Select from dropdown) *
+                </label>
+                <p className="text-[11px] text-neutral-500 mb-2">
+                  Choose the unique experiences you host and lead travelers through:
+                </p>
+                <select
+                  value={selectedSpecialtyDropdown}
+                  onChange={handleAddSpecialtyFromDropdown}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm font-medium focus:ring-2 focus:ring-guide-cyan focus:outline-none bg-white text-neutral-800"
+                >
+                  <option value="">-- Choose a Guiding Specialty to Add --</option>
+                  {EXPERIENCE_SPECIALTIES.map((spec) => (
+                    <option key={spec} value={spec} disabled={specialties.includes(spec)}>
+                      {spec} {specialties.includes(spec) ? '(Added)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selected Specialties Chips */}
+              {specialties.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold uppercase text-neutral-400">Selected Specialties:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {specialties.map((spec) => (
+                      <span
+                        key={spec}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-guide-skyBlue text-guide-navy text-xs font-bold border border-guide-primary/30"
+                      >
+                        <span>{spec}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSpecialty(spec)}
+                          className="p-0.5 rounded-full hover:bg-black/10 text-neutral-500 hover:text-black"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Add Custom Specialty Input */}
+              <div className="pt-2 border-t border-neutral-100">
+                <label className="block text-[11px] font-bold uppercase text-neutral-500 mb-1">
+                  Don't see your specialty? Add a custom one:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customSpecialtyInput}
+                    onChange={(e) => setCustomSpecialtyInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomSpecialty();
+                      }
+                    }}
+                    placeholder="e.g. Traditional Pottery & Clay Craft"
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-neutral-200 text-xs sm:text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomSpecialty}
+                    className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-black text-white text-xs font-bold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -327,7 +520,13 @@ export default function GuideOnboardingPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentStep(3)}
+                onClick={() => {
+                  if (specialties.length === 0) {
+                    alert("Please select or add at least one guiding specialty.");
+                    return;
+                  }
+                  setCurrentStep(3);
+                }}
                 className="px-6 py-3 rounded-xl bg-guide-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-guide-headerDark flex items-center gap-2"
               >
                 <span>Continue to KYC</span>
@@ -342,57 +541,59 @@ export default function GuideOnboardingPage() {
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 shadow-sm space-y-6">
             <div>
               <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
-                Aadhaar Number (12 Digits) *
+                Government ID / Aadhaar Number *
               </label>
               <input
                 type="text"
-                maxLength="12"
+                required
+                maxLength="16"
                 value={aadhaarNumber}
-                onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="1234 5678 9012"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none font-mono"
+                onChange={(e) => setAadhaarNumber(e.target.value)}
+                placeholder="12-digit Aadhaar / Passport / Voter ID"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none tracking-widest font-mono"
               />
             </div>
 
+            {/* Document Upload Side by Side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Front Photo */}
-              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3">
-                <span className="text-xs font-bold text-neutral-700 block">Aadhaar Front Photo</span>
+              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-2">
+                <FileText className="w-8 h-8 text-neutral-400 mx-auto" />
+                <span className="block text-xs font-bold text-neutral-700">ID Front Side</span>
                 {aadhaarFrontUrl ? (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200">
-                    <img src={aadhaarFrontUrl} alt="Aadhaar Front" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-1 right-1 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Uploaded</span>
-                  </div>
+                  <span className="text-xs text-emerald-600 font-bold flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Uploaded
+                  </span>
                 ) : (
-                  <div className="py-4">
-                    <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
-                    <p className="text-[11px] text-neutral-400">Clear photo of Aadhaar Front</p>
-                  </div>
+                  <label className="inline-block px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold cursor-pointer">
+                    {uploadingFront ? 'Uploading...' : 'Choose File'}
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleUploadAadhaar(e.target.files[0], 'front')}
+                    />
+                  </label>
                 )}
-                <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
-                  {uploadingFront ? 'Uploading...' : 'Choose Front File'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadAadhaar(e.target.files?.[0], 'front')} />
-                </label>
               </div>
 
-              {/* Back Photo */}
-              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-3">
-                <span className="text-xs font-bold text-neutral-700 block">Aadhaar Back Photo</span>
+              <div className="p-4 rounded-2xl border-2 border-dashed border-neutral-200 text-center space-y-2">
+                <FileText className="w-8 h-8 text-neutral-400 mx-auto" />
+                <span className="block text-xs font-bold text-neutral-700">ID Back Side</span>
                 {aadhaarBackUrl ? (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-neutral-200">
-                    <img src={aadhaarBackUrl} alt="Aadhaar Back" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-1 right-1 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Uploaded</span>
-                  </div>
+                  <span className="text-xs text-emerald-600 font-bold flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Uploaded
+                  </span>
                 ) : (
-                  <div className="py-4">
-                    <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
-                    <p className="text-[11px] text-neutral-400">Clear photo with address</p>
-                  </div>
+                  <label className="inline-block px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-bold cursor-pointer">
+                    {uploadingBack ? 'Uploading...' : 'Choose File'}
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handleUploadAadhaar(e.target.files[0], 'back')}
+                    />
+                  </label>
                 )}
-                <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
-                  {uploadingBack ? 'Uploading...' : 'Choose Back File'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadAadhaar(e.target.files?.[0], 'back')} />
-                </label>
               </div>
             </div>
 
@@ -406,46 +607,64 @@ export default function GuideOnboardingPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setCurrentStep(4)}
+                onClick={() => {
+                  if (!aadhaarNumber) {
+                    alert("Please enter your Government ID number.");
+                    return;
+                  }
+                  setCurrentStep(4);
+                }}
                 className="px-6 py-3 rounded-xl bg-guide-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-guide-headerDark flex items-center gap-2"
               >
-                <span>Continue to Step 4</span>
+                <span>Continue to Summary</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 4: Native Roots & Bio */}
+        {/* Step 4: Summary & Final Submission */}
         {currentStep === 4 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 shadow-sm space-y-6">
-            {error && (
-              <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                <span>{error}</span>
+            <h3 className="font-bold text-lg text-neutral-900 border-b pb-3">
+              Review Registration Details
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="space-y-1">
+                <span className="text-neutral-400 uppercase font-bold">Legal Name:</span>
+                <p className="font-semibold text-neutral-800 text-sm">{fullName}</p>
               </div>
-            )}
+              <div className="space-y-1">
+                <span className="text-neutral-400 uppercase font-bold">Phone:</span>
+                <p className="font-semibold text-neutral-800 text-sm">{phoneCode} {rawPhone}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-neutral-400 uppercase font-bold">Location:</span>
+                <p className="font-semibold text-neutral-800 text-sm">{isCustomCity ? customCity : city}, {state}, {country}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-neutral-400 uppercase font-bold">Experience:</span>
+                <p className="font-semibold text-neutral-800 text-sm">{experienceYears} Years</p>
+              </div>
+            </div>
 
-            <SearchableSelect
-              label="Native State / Homeland Roots *"
-              options={ALL_REGIONS}
-              value={birthState}
-              onChange={setBirthState}
-              placeholder="Search or enter homeland roots (e.g. Nepal, Ladakh, Uttarakhand)..."
-            />
+            <div className="space-y-1">
+              <span className="text-neutral-400 uppercase font-bold text-xs">Guiding Specialties:</span>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {specialties.map((s) => (
+                  <span key={s} className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-semibold">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase text-neutral-600 mb-1">
-                Your Guiding Bio & Story *
-              </label>
-              <textarea
-                rows="4"
-                required
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Share your connection to the trails, indigenous stories, and what makes your expeditions special..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-sm focus:ring-2 focus:ring-guide-cyan focus:outline-none"
-              />
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2.5">
+              <Clock className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+              <span>
+                Upon submission, your profile documents will be locked under review. Host dashboard and itinerary features will unlock once approved by admin.
+              </span>
             </div>
 
             <div className="pt-4 flex justify-between">
@@ -478,7 +697,7 @@ export default function GuideOnboardingPage() {
           </div>
         )}
 
-        {/* Step 5: Under Verification / Pending Approval Status Screen */}
+        {/* Step 5: Under Verification / Pending Approval Locked Status Screen (Requirement 14) */}
         {currentStep === 5 && (
           <div className="bg-white rounded-3xl border border-neutral-200 p-8 sm:p-12 text-center max-w-xl mx-auto space-y-6 shadow-sm">
             <div className="w-20 h-20 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto border-4 border-amber-100">
@@ -486,7 +705,7 @@ export default function GuideOnboardingPage() {
             </div>
 
             <div className="space-y-2">
-              <span className="text-xs font-bold tracking-widest text-amber-700 uppercase bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+              <span className="text-xs font-bold tracking-widest text-amber-700 uppercase bg-amber-50 px-3.5 py-1 rounded-full border border-amber-200 inline-block">
                 VERIFICATION IN PROGRESS
               </span>
               <h2 className="text-2xl font-black font-sans text-neutral-900">
@@ -497,6 +716,17 @@ export default function GuideOnboardingPage() {
               </p>
             </div>
 
+            {/* Host Content Locked Notice */}
+            <div className="p-4 rounded-2xl bg-neutral-900 text-white text-left text-xs space-y-2 shadow-md">
+              <div className="flex items-center gap-2 text-amber-400 font-bold">
+                <Lock className="w-4 h-4 flex-shrink-0" />
+                <span>Host Portal & Itineraries Locked</span>
+              </div>
+              <p className="text-[11px] text-neutral-300 leading-relaxed">
+                Host dashboard, itinerary creation, and bookings will remain locked until your verification is approved from the admin section. Once approved, you will have complete access.
+              </p>
+            </div>
+
             <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200 text-left text-xs space-y-2">
               <div className="flex items-center gap-2 text-neutral-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -504,7 +734,7 @@ export default function GuideOnboardingPage() {
               </div>
               <div className="flex items-center gap-2 text-neutral-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>ID Document Captured</span>
+                <span>Government ID Captured</span>
               </div>
               <div className="flex items-center gap-2 text-amber-700 font-semibold">
                 <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
@@ -512,12 +742,28 @@ export default function GuideOnboardingPage() {
               </div>
             </div>
 
+            {/* Status message banner if any */}
+            {statusMessage && (
+              <div className={`p-3 rounded-xl text-xs font-semibold ${
+                statusMessage.type === 'success' 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : statusMessage.type === 'error'
+                    ? 'bg-red-100 text-red-800 border border-red-300'
+                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+              }`}>
+                {statusMessage.text}
+              </div>
+            )}
+
+            {/* Action buttons: No "Go to Host Dashboard" button! Only Refresh Status & Explorer Feed */}
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => navigate('/guide/dashboard')}
-                className="px-6 py-3 rounded-xl bg-guide-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-guide-headerDark"
+                onClick={handleCheckStatus}
+                disabled={statusChecking}
+                className="px-6 py-3 rounded-xl bg-guide-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-guide-headerDark flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
               >
-                Go to Host Dashboard
+                {statusChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                <span>Refresh / Check Approval Status</span>
               </button>
               <button
                 onClick={() => navigate('/explore')}

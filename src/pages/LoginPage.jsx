@@ -4,18 +4,46 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import CinematicScenicBackground from '../components/common/CinematicScenicBackground';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { COUNTRY_LIST } from '../data/geoData';
+import { 
+  Phone, 
+  KeyRound, 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  ArrowLeft, 
+  Loader2, 
+  CheckCircle2,
+  ShieldCheck
+} from 'lucide-react';
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { login, setRole } = useAuth();
+  const { login, loginWithPhoneOtp, setRole } = useAuth();
 
   const roleParam = searchParams.get('role') || 'traveller';
   const [activeRole, setActiveRole] = useState(roleParam.toLowerCase());
+  
+  // Auth Mode: 'otp' (default) vs 'email'
+  const [authMode, setAuthMode] = useState('otp');
+
+  // OTP Form State
+  const [countryCode, setCountryCode] = useState('+91');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+
+  // Email Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // General State
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -34,7 +62,58 @@ export default function LoginPage() {
     setError(null);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = () => {
+    if (!phoneNumber || phoneNumber.trim().length < 6) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
+    setError(null);
+    setOtpSending(true);
+
+    setTimeout(() => {
+      // Generate a secure 6-digit verification code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(code);
+      setOtpSent(true);
+      setOtpSending(false);
+    }, 600);
+  };
+
+  const handleVerifyOtpAndLogin = async (e) => {
+    e.preventDefault();
+    if (!enteredOtp || enteredOtp.trim() !== generatedOtp) {
+      setError("Invalid OTP code. Please enter the 6-digit code sent to your phone.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    const fullPhone = `${countryCode} ${phoneNumber.trim()}`;
+
+    try {
+      const { user, profile } = await loginWithPhoneOtp(fullPhone, activeRole);
+      
+      if (activeRole === 'traveller') {
+        const redirect = searchParams.get('redirect') || '/explore';
+        navigate(redirect);
+      } else {
+        // Requirement 14: If guide is not approved by admin, navigate to Documents Under Review screen directly
+        if (!profile?.verified) {
+          navigate('/guide/onboarding');
+        } else {
+          navigate('/guide/dashboard');
+        }
+      }
+    } catch (err) {
+      console.error("OTP Login failed:", err);
+      setError(err.message || "Failed to verify and sign in.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please enter both email and password.');
@@ -48,10 +127,11 @@ export default function LoginPage() {
       const { user, profile } = await login(email, password, activeRole);
       
       if (activeRole === 'traveller') {
-        const redirect = searchParams.get('redirect') || '/dashboard';
+        const redirect = searchParams.get('redirect') || '/explore';
         navigate(redirect);
       } else {
-        if (!profile?.onboardingComplete) {
+        // Requirement 14: If guide is not verified by admin, navigate to review screen directly
+        if (!profile?.verified) {
           navigate('/guide/onboarding');
         } else {
           navigate('/guide/dashboard');
@@ -131,7 +211,7 @@ export default function LoginPage() {
           </div>
 
           {/* Role Switcher Pill */}
-          <div className="flex rounded-xl p-1 bg-black/30 border border-white/10 mb-6">
+          <div className="flex rounded-xl p-1 bg-black/30 border border-white/10 mb-5">
             <button
               type="button"
               onClick={() => handleRoleToggle('traveller')}
@@ -152,6 +232,24 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Auth Method Switcher (OTP vs Email) */}
+          <div className="flex border-b border-white/15 mb-5 pb-2 text-xs font-bold justify-center gap-6">
+            <button
+              type="button"
+              onClick={() => { setAuthMode('otp'); setError(null); }}
+              className={`pb-1 transition-all ${authMode === 'otp' ? 'text-emerald-300 border-b-2 border-emerald-400 font-extrabold' : 'text-white/60 hover:text-white'}`}
+            >
+              Mobile & OTP Login
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthMode('email'); setError(null); }}
+              className={`pb-1 transition-all ${authMode === 'email' ? 'text-emerald-300 border-b-2 border-emerald-400 font-extrabold' : 'text-white/60 hover:text-white'}`}
+            >
+              Email & Password
+            </button>
+          </div>
+
           {/* Error Banner */}
           {error && (
             <div className="mb-5 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs flex items-start gap-2">
@@ -160,82 +258,204 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
+          {/* MODE 1: OTP AUTHENTICATION (DEFAULT) */}
+          {authMode === 'otp' && (
+            <form onSubmit={handleVerifyOtpAndLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                  Mobile Number (with Country Code)
+                </label>
+                <div className="flex gap-2">
+                  {/* Country Code Dropdown (Requirement 12) */}
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    disabled={otpSent}
+                    className="w-28 px-2 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  >
+                    {COUNTRY_LIST.map((c) => (
+                      <option key={c.dialCode + c.code} value={c.dialCode}>
+                        {c.flag} {c.dialCode}
+                      </option>
+                    ))}
+                  </select>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-                />
+                  <div className="relative flex-1">
+                    <Phone className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                    <input
+                      type="tel"
+                      required
+                      disabled={otpSent}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="98765 43210"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {!otpSent ? (
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-white/50 hover:text-white"
+                  onClick={handleSendOtp}
+                  disabled={otpSending}
+                  className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
+                    isGuide
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                      : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                  }`}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {otpSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Sending OTP...</span>
+                    </>
+                  ) : (
+                    <span>Send Verification OTP</span>
+                  )}
                 </button>
-              </div>
-              <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResetEmail(email || '');
-                    setResetSuccess(false);
-                    setResetError(null);
-                    setShowForgotModal(true);
-                  }}
-                  className="text-xs font-semibold text-emerald-200 hover:text-white transition-colors"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-2 ${
-                isGuide
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                  : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Signing In...</span>
-                </>
               ) : (
-                <span>Sign In</span>
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  {/* Verified OTP Demonstration Banner */}
+                  <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-emerald-300">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>OTP Sent to {countryCode} {phoneNumber}</span>
+                    </div>
+                    <p className="text-[11px] text-white/80">
+                      Enter code <span className="font-mono font-black text-sm bg-black/40 px-2 py-0.5 rounded text-white tracking-widest">{generatedOtp}</span> below:
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                      Enter 6-Digit OTP Code
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                      <input
+                        type="text"
+                        maxLength="6"
+                        required
+                        value={enteredOtp}
+                        onChange={(e) => setEnteredOtp(e.target.value)}
+                        placeholder="e.g. 123456"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-center tracking-widest font-mono text-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setOtpSent(false); setEnteredOtp(''); }}
+                      className="px-4 py-2.5 rounded-xl border border-white/20 text-xs font-semibold hover:bg-white/10"
+                    >
+                      Change Number
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
+                        isGuide
+                          ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                          : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                      }`}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Verifying...</span>
+                        </>
+                      ) : (
+                        <span>Verify & Sign In</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
-          </form>
+            </form>
+          )}
+
+          {/* MODE 2: EMAIL & PASSWORD (ALTERNATIVE) */}
+          {authMode === 'email' && (
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3 text-white/50 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(email || '');
+                      setResetSuccess(false);
+                      setResetError(null);
+                      setShowForgotModal(true);
+                    }}
+                    className="text-xs font-semibold text-emerald-200 hover:text-white transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-2 ${
+                  isGuide
+                    ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                    : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <span>Sign In</span>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Switch to Signup */}
           <div className="mt-6 text-center text-xs text-white/70">

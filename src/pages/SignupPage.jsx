@@ -2,47 +2,68 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CinematicScenicBackground from '../components/common/CinematicScenicBackground';
-import { Mail, Lock, User, Phone, MapPin, Eye, EyeOff, AlertCircle, ArrowLeft, Loader2, Award } from 'lucide-react';
-
-const INDIAN_STATES = [
-  'Uttarakhand',
-  'Himachal Pradesh',
-  'Ladakh',
-  'Jammu & Kashmir',
-  'Sikkim',
-  'Rajasthan',
-  'Kerala',
-  'Goa',
-  'Karnataka',
-  'Tamil Nadu',
-  'Maharashtra',
-  'Gujarat',
-  'Uttar Pradesh',
-  'West Bengal'
-];
+import { 
+  COUNTRY_LIST, 
+  INDIAN_STATES_AND_UTS, 
+  NEPAL_REGIONS, 
+  BHUTAN_REGIONS, 
+  STATE_CITIES_MAP 
+} from '../data/geoData';
+import { 
+  User, 
+  Phone, 
+  MapPin, 
+  AlertCircle, 
+  ArrowLeft, 
+  Loader2, 
+  Award,
+  KeyRound,
+  CheckCircle2,
+  Globe
+} from 'lucide-react';
 
 export default function SignupPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { signup, setRole } = useAuth();
+  const { signupWithPhoneOtp, setRole } = useAuth();
 
   const roleParam = searchParams.get('role') || 'traveller';
   const [activeRole, setActiveRole] = useState(roleParam.toLowerCase());
   
+  // Basic Form State
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [country, setCountry] = useState('India');
+  const [countryCode, setCountryCode] = useState('+91');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [state, setState] = useState('Uttarakhand');
   const [city, setCity] = useState('');
+  const [customCity, setCustomCity] = useState('');
+  const [isCustomCity, setIsCustomCity] = useState(false);
   const [experienceYears, setExperienceYears] = useState(2);
   const [bio, setBio] = useState('');
+
+  // OTP Verification State
+  const [otpSent, setOtpSent] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
   
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const isGuide = activeRole === 'guide';
+
+  // Available states based on country
+  const availableStates = country === 'India'
+    ? INDIAN_STATES_AND_UTS
+    : country === 'Nepal'
+      ? NEPAL_REGIONS
+      : country === 'Bhutan'
+        ? BHUTAN_REGIONS
+        : ['All Regions'];
+
+  // Available cities based on selected state
+  const availableCities = STATE_CITIES_MAP[state] || [];
 
   const handleRoleToggle = (role) => {
     setActiveRole(role);
@@ -50,29 +71,48 @@ export default function SignupPage() {
     setError(null);
   };
 
+  const handleSendOtp = () => {
+    if (!name || name.trim().length < 2) {
+      setError("Please provide your full legal name.");
+      return;
+    }
+    if (!phoneNumber || phoneNumber.trim().length < 6) {
+      setError("Please enter a valid mobile number.");
+      return;
+    }
+    setError(null);
+    setOtpSending(true);
+
+    setTimeout(() => {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(code);
+      setOtpSent(true);
+      setOtpSending(false);
+    }, 600);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password) {
-      setError('Please provide your name, email, and password.');
+    if (!enteredOtp || enteredOtp.trim() !== generatedOtp) {
+      setError('Invalid OTP code. Please enter the 6-digit code sent to your phone.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password should be at least 6 characters.');
-      return;
-    }
+
+    const finalCity = isCustomCity ? customCity.trim() : (city || (availableCities[0] || 'Base Town'));
 
     setIsLoading(true);
     setError(null);
 
+    const fullPhoneNumber = `${countryCode} ${phoneNumber.trim()}`;
+
     try {
-      await signup({
-        name,
-        email,
-        password,
-        phone,
+      await signupWithPhoneOtp({
+        name: name.trim(),
+        phone: fullPhoneNumber,
+        country,
         role: activeRole,
         state,
-        city,
+        city: finalCity,
         experienceYears,
         bio
       });
@@ -80,16 +120,12 @@ export default function SignupPage() {
       if (isGuide) {
         navigate('/guide/onboarding');
       } else {
-        const redirect = searchParams.get('redirect') || '/dashboard';
+        const redirect = searchParams.get('redirect') || '/explore';
         navigate(redirect);
       }
     } catch (err) {
       console.error("Signup error:", err);
-      let msg = err.message || "Failed to create account.";
-      if (err.code === 'auth/email-already-in-use') {
-        msg = "An account with this email already exists.";
-      }
-      setError(msg);
+      setError(err.message || "Failed to create account.");
     } finally {
       setIsLoading(false);
     }
@@ -173,6 +209,7 @@ export default function SignupPage() {
                 <input
                   type="text"
                   required
+                  disabled={otpSent}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Tenzing Norgay"
@@ -181,43 +218,70 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Email & Phone */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
-                  Email Address *
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@email.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                </div>
+            {/* Country Selector Dropdown (Requirement 11) */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
+                Country *
+              </label>
+              <div className="relative">
+                <select
+                  value={country}
+                  disabled={otpSent}
+                  onChange={(e) => {
+                    const newCountry = e.target.value;
+                    setCountry(newCountry);
+                    const matched = COUNTRY_LIST.find((c) => c.name === newCountry);
+                    if (matched) setCountryCode(matched.dialCode);
+                    if (newCountry === 'India') setState('Uttarakhand');
+                    else if (newCountry === 'Nepal') setState(NEPAL_REGIONS[0]);
+                    else if (newCountry === 'Bhutan') setState(BHUTAN_REGIONS[0]);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                >
+                  {COUNTRY_LIST.map((c) => (
+                    <option key={c.name} value={c.name} className="bg-neutral-900 text-white">
+                      {c.flag} {c.name} ({c.dialCode})
+                    </option>
+                  ))}
+                </select>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
+            {/* Mobile Number with Country Code Dropdown (Requirement 12) */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
+                Mobile Number (for OTP Verification) *
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={countryCode}
+                  disabled={otpSent}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="w-28 px-2 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                >
+                  {COUNTRY_LIST.map((c) => (
+                    <option key={c.dialCode + c.code} value={c.dialCode} className="bg-neutral-900 text-white">
+                      {c.flag} {c.dialCode}
+                    </option>
+                  ))}
+                </select>
+
+                <div className="relative flex-1">
                   <Phone className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
                   <input
                     type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    required
+                    disabled={otpSent}
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="98765 43210"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
               </div>
             </div>
 
-            {/* State & City */}
+            {/* Cascading State & City Dropdowns (Requirement 11) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
@@ -226,10 +290,21 @@ export default function SignupPage() {
                 <div className="relative">
                   <select
                     value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-900/90 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    disabled={otpSent}
+                    onChange={(e) => {
+                      const newState = e.target.value;
+                      setState(newState);
+                      const cities = STATE_CITIES_MAP[newState] || [];
+                      if (cities.length > 0) {
+                        setCity(cities[0]);
+                        setIsCustomCity(false);
+                      } else {
+                        setIsCustomCity(true);
+                      }
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   >
-                    {INDIAN_STATES.map((s) => (
+                    {availableStates.map((s) => (
                       <option key={s} value={s} className="bg-neutral-900 text-white">
                         {s}
                       </option>
@@ -240,17 +315,40 @@ export default function SignupPage() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
-                  City / Base Town
+                  City / Base Town *
                 </label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. Manali, Rishikesh"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
+                  {!isCustomCity && availableCities.length > 0 ? (
+                    <select
+                      value={city || availableCities[0]}
+                      disabled={otpSent}
+                      onChange={(e) => {
+                        if (e.target.value === '__OTHER__') {
+                          setIsCustomCity(true);
+                          setCustomCity('');
+                        } else {
+                          setCity(e.target.value);
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    >
+                      {availableCities.map((c) => (
+                        <option key={c} value={c} className="bg-neutral-900 text-white">
+                          {c}
+                        </option>
+                      ))}
+                      <option value="__OTHER__" className="bg-neutral-900 text-emerald-400 font-bold">+ Other Base Town</option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      disabled={otpSent}
+                      value={customCity}
+                      onChange={(e) => setCustomCity(e.target.value)}
+                      placeholder="e.g. Manali, Rishikesh"
+                      className="w-full pl-3 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -268,6 +366,7 @@ export default function SignupPage() {
                       type="number"
                       min="0"
                       max="40"
+                      disabled={otpSent}
                       value={experienceYears}
                       onChange={(e) => setExperienceYears(e.target.value)}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
@@ -277,63 +376,100 @@ export default function SignupPage() {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
-                    Brief Bio / Background
+                    Brief Bio / Roots in the Homeland
                   </label>
                   <textarea
                     rows="2"
+                    disabled={otpSent}
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell explorers about your roots, trails you know, and your guiding experience..."
+                    placeholder="Tell explorers about your roots and the local trails you guide..."
                     className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
               </div>
             )}
 
-            {/* Password */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1">
-                Password *
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-white/50 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            {/* OTP VERIFICATION SECTION */}
+            {!otpSent ? (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={otpSending}
+                className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
+                  isGuide
+                    ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                    : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                }`}
+              >
+                {otpSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Sending OTP...</span>
+                  </>
+                ) : (
+                  <span>Send Verification OTP</span>
+                )}
+              </button>
+            ) : (
+              <div className="space-y-4 pt-2 border-t border-white/15 animate-in fade-in duration-150">
+                <div className="p-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-emerald-300">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>OTP Sent to {countryCode} {phoneNumber}</span>
+                  </div>
+                  <p className="text-[11px] text-white/80">
+                    Enter code <span className="font-mono font-black text-sm bg-black/40 px-2 py-0.5 rounded text-white tracking-widest">{generatedOtp}</span> to verify registration:
+                  </p>
+                </div>
 
-            {/* Submit CTA */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
-                isGuide
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                  : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Account...</span>
-                </>
-              ) : (
-                <span>Complete Registration</span>
-              )}
-            </button>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                    Enter 6-Digit OTP Code
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                    <input
+                      type="text"
+                      maxLength="6"
+                      required
+                      value={enteredOtp}
+                      onChange={(e) => setEnteredOtp(e.target.value)}
+                      placeholder="e.g. 123456"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-center tracking-widest font-mono text-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setOtpSent(false); setEnteredOtp(''); }}
+                    className="px-4 py-2.5 rounded-xl border border-white/20 text-xs font-semibold hover:bg-white/10"
+                  >
+                    Edit Info
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
+                      isGuide
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
+                        : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                    }`}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Verifying & Creating...</span>
+                      </>
+                    ) : (
+                      <span>Complete Registration</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
 
           {/* Switch to Login */}

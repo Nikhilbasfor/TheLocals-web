@@ -25,11 +25,23 @@ import CreateEditExperiencePage from './pages/guide/CreateEditExperiencePage';
 import GuideBookingsPage from './pages/guide/GuideBookingsPage';
 import GuideProfilePage from './pages/guide/GuideProfilePage';
 
-// Protected Route Guard for Guide
+// Protected Route Guard for Guide (Any Guide status, e.g. onboarding/verification review)
 function GuideRoute({ children }) {
-  const { currentUser, isGuide } = useAuth();
+  const { currentUser } = useAuth();
   if (!currentUser) {
     return <Navigate to="/login?role=guide" replace />;
+  }
+  return children;
+}
+
+// Protected Route Guard for Approved Guides (Locked until admin approves)
+function ApprovedGuideRoute({ children }) {
+  const { currentUser, userProfile } = useAuth();
+  if (!currentUser) {
+    return <Navigate to="/login?role=guide" replace />;
+  }
+  if (!userProfile?.verified) {
+    return <Navigate to="/guide/onboarding" replace />;
   }
   return children;
 }
@@ -51,8 +63,8 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* Traveller Routes */}
-      <Route path="/dashboard" element={<TravellerRoute><TravellerDashboardPage /></TravellerRoute>} />
+      {/* Traveller Routes (Explore is primary homepage, dashboard redirects to explore) */}
+      <Route path="/dashboard" element={<Navigate to="/explore" replace />} />
       <Route path="/explore" element={<ExploreHomePage />} />
       <Route path="/experience/:id" element={<ExperienceDetailPage />} />
       <Route path="/guides" element={<VerifiedGuidesPage />} />
@@ -61,17 +73,17 @@ function AppRoutes() {
       <Route path="/wishlist" element={<TravellerRoute><WishlistPage /></TravellerRoute>} />
       <Route path="/profile" element={<TravellerRoute><TravellerProfilePage /></TravellerRoute>} />
 
-      {/* Guide Routes */}
+      {/* Guide Routes (Locked until admin approval except onboarding/review page) */}
       <Route path="/guide/onboarding" element={<GuideRoute><GuideOnboardingPage /></GuideRoute>} />
-      <Route path="/guide/dashboard" element={<GuideRoute><GuideDashboardPage /></GuideRoute>} />
-      <Route path="/guide/experiences" element={<GuideRoute><GuideExperiencesPage /></GuideRoute>} />
-      <Route path="/guide/create-experience" element={<GuideRoute><CreateEditExperiencePage /></GuideRoute>} />
-      <Route path="/guide/edit-experience/:id" element={<GuideRoute><CreateEditExperiencePage /></GuideRoute>} />
-      <Route path="/guide/bookings" element={<GuideRoute><GuideBookingsPage /></GuideRoute>} />
-      <Route path="/guide/profile" element={<GuideRoute><GuideProfilePage /></GuideRoute>} />
+      <Route path="/guide/dashboard" element={<ApprovedGuideRoute><GuideDashboardPage /></ApprovedGuideRoute>} />
+      <Route path="/guide/experiences" element={<ApprovedGuideRoute><GuideExperiencesPage /></ApprovedGuideRoute>} />
+      <Route path="/guide/create-experience" element={<ApprovedGuideRoute><CreateEditExperiencePage /></ApprovedGuideRoute>} />
+      <Route path="/guide/edit-experience/:id" element={<ApprovedGuideRoute><CreateEditExperiencePage /></ApprovedGuideRoute>} />
+      <Route path="/guide/bookings" element={<ApprovedGuideRoute><GuideBookingsPage /></ApprovedGuideRoute>} />
+      <Route path="/guide/profile" element={<ApprovedGuideRoute><GuideProfilePage /></ApprovedGuideRoute>} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/explore" replace />} />
     </Routes>
   );
 }

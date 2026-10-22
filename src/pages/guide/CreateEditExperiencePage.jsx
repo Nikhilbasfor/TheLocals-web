@@ -31,7 +31,12 @@ import {
   DollarSign,
   Package,
   ShieldAlert,
-  ExternalLink
+  ExternalLink,
+  Bed,
+  Utensils,
+  Clock,
+  Compass,
+  Luggage
 } from 'lucide-react';
 import SearchableSelect from '../../components/common/SearchableSelect';
 
@@ -59,7 +64,10 @@ export default function CreateEditExperiencePage() {
   const [loading, setLoading] = useState(isEditing);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form Fields (No hardcoded default numbers; clean empty state with faded placeholders)
+  // Itinerary Mode: 'both' | 'days' | 'pdf'
+  const [itineraryMode, setItineraryMode] = useState('both');
+
+  // Form Fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -88,6 +96,54 @@ export default function CreateEditExperiencePage() {
   const [customPdfUrl, setCustomPdfUrl] = useState('');
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [showSamplePdfModal, setShowSamplePdfModal] = useState(false);
+
+  // Day-by-Day Itinerary Data
+  const [days, setDays] = useState([
+    {
+      dayNumber: 1,
+      dayTitle: 'Arrival & Expedition Briefing',
+      accommodation: 'Local Homestay / Eco Lodge',
+      accommodationMapsUrl: '',
+      overnightStay: '',
+      mealsIncluded: ['Dinner'],
+      transportInfo: 'Pickup from base hub',
+      activities: [
+        {
+          time: '02:00 PM',
+          activityTitle: 'Welcome, Orientation & Route Walkthrough',
+          location: 'Base Camp / Homestay',
+          description: 'Meet your local host, inspect trekking gear, enjoy local herbal tea, and review safety guidelines.'
+        }
+      ]
+    }
+  ]);
+
+  // Inclusions, Exclusions & Things to Carry
+  const [inclusions, setInclusions] = useState([
+    'Certified local host and safety guides',
+    'All accommodations (homestays / alpine tents)',
+    'Nutritious local traditional meals & trail tea',
+    'Inner Line Permits and entry forest passes'
+  ]);
+  const [newInclusion, setNewInclusion] = useState('');
+
+  const [exclusions, setExclusions] = useState([
+    'Personal gear, backpack & sleeping bag',
+    'Personal travel & medical insurance',
+    'Festival tickets & camera passes',
+    'Tips and personal emergency expenses'
+  ]);
+  const [newExclusion, setNewExclusion] = useState('');
+
+  const [thingsToCarry, setThingsToCarry] = useState([
+    'Sturdy trekking boots with ankle support',
+    'Warm fleece jacket & rain poncho',
+    'Headlamp / flashlight with extra batteries',
+    'Reusable 1L water bottle & thermos flask',
+    'Personal medication & first-aid essentials',
+    'Power bank and valid Government Photo ID'
+  ]);
+  const [newThing, setNewThing] = useState('');
 
   // Route Pins (Optional waypoints)
   const [routePins, setRoutePins] = useState([
@@ -125,6 +181,23 @@ export default function CreateEditExperiencePage() {
           if (data.pdfUrl) setPdfUrl(data.pdfUrl);
           if (data.pdfName) setPdfName(data.pdfName);
           if (data.routePins?.length) setRoutePins(data.routePins);
+          if (data.days?.length) setDays(data.days);
+          if (data.inclusions?.length) setInclusions(data.inclusions);
+          if (data.exclusions?.length) setExclusions(data.exclusions);
+          if (data.thingsToCarry?.length) setThingsToCarry(data.thingsToCarry);
+
+          // Configure mode based on what exists
+          const hasDaysData = data.days && data.days.length > 0 && data.days.some(d => d.dayTitle?.trim() || d.activities?.length > 0);
+          const hasPdfData = Boolean(data.pdfUrl);
+          if (hasDaysData && hasPdfData) {
+            setItineraryMode('both');
+          } else if (hasDaysData) {
+            setItineraryMode('days');
+          } else if (hasPdfData) {
+            setItineraryMode('pdf');
+          } else {
+            setItineraryMode('both');
+          }
         }
       } catch (err) {
         console.error("Error loading experience for edit:", err);
@@ -212,6 +285,137 @@ export default function CreateEditExperiencePage() {
     setRoutePins(updated);
   };
 
+  // Day Operations
+  const addDay = () => {
+    const nextNum = days.length + 1;
+    setDays(prev => [
+      ...prev,
+      {
+        dayNumber: nextNum,
+        dayTitle: `Expedition Day ${nextNum}`,
+        accommodation: 'Homestay / Alpine Tents',
+        accommodationMapsUrl: '',
+        overnightStay: '',
+        mealsIncluded: ['Breakfast', 'Dinner'],
+        transportInfo: '',
+        activities: [
+          {
+            time: '08:00 AM',
+            activityTitle: 'Morning Exploration',
+            location: 'Trail Path',
+            description: 'Begin daily hike, cultural immersion or sightseeing with local guide.'
+          }
+        ]
+      }
+    ]);
+    if (Number(durationDays) < nextNum) {
+      setDurationDays(nextNum);
+    }
+  };
+
+  const removeDay = (dayIndex) => {
+    const filtered = days.filter((_, idx) => idx !== dayIndex);
+    const renumbered = filtered.map((d, i) => ({ ...d, dayNumber: i + 1 }));
+    setDays(renumbered);
+    if (Number(durationDays) > renumbered.length) {
+      setDurationDays(renumbered.length || 1);
+    }
+  };
+
+  const updateDayField = (dayIndex, field, value) => {
+    setDays(prev => {
+      const updated = [...prev];
+      updated[dayIndex] = { ...updated[dayIndex], [field]: value };
+      return updated;
+    });
+  };
+
+  const toggleDayMeal = (dayIndex, meal) => {
+    setDays(prev => {
+      const updated = [...prev];
+      const currentMeals = updated[dayIndex].mealsIncluded || [];
+      const nextMeals = currentMeals.includes(meal)
+        ? currentMeals.filter(m => m !== meal)
+        : [...currentMeals, meal];
+      updated[dayIndex] = { ...updated[dayIndex], mealsIncluded: nextMeals };
+      return updated;
+    });
+  };
+
+  // Activity Operations within Day
+  const addActivityToDay = (dayIndex) => {
+    setDays(prev => {
+      const updated = [...prev];
+      const currentActivities = updated[dayIndex].activities || [];
+      updated[dayIndex] = {
+        ...updated[dayIndex],
+        activities: [
+          ...currentActivities,
+          {
+            time: '12:00 PM',
+            activityTitle: '',
+            location: '',
+            description: ''
+          }
+        ]
+      };
+      return updated;
+    });
+  };
+
+  const removeActivityFromDay = (dayIndex, activityIndex) => {
+    setDays(prev => {
+      const updated = [...prev];
+      const currentActivities = updated[dayIndex].activities || [];
+      updated[dayIndex] = {
+        ...updated[dayIndex],
+        activities: currentActivities.filter((_, i) => i !== activityIndex)
+      };
+      return updated;
+    });
+  };
+
+  const updateActivityField = (dayIndex, activityIndex, field, value) => {
+    setDays(prev => {
+      const updated = [...prev];
+      const currentActivities = [...(updated[dayIndex].activities || [])];
+      currentActivities[activityIndex] = {
+        ...currentActivities[activityIndex],
+        [field]: value
+      };
+      updated[dayIndex] = {
+        ...updated[dayIndex],
+        activities: currentActivities
+      };
+      return updated;
+    });
+  };
+
+  // Inclusions & Exclusions & Things To Carry Handlers
+  const handleAddInclusion = (e) => {
+    e?.preventDefault();
+    if (newInclusion.trim()) {
+      setInclusions(prev => [...prev, newInclusion.trim()]);
+      setNewInclusion('');
+    }
+  };
+
+  const handleAddExclusion = (e) => {
+    e?.preventDefault();
+    if (newExclusion.trim()) {
+      setExclusions(prev => [...prev, newExclusion.trim()]);
+      setNewExclusion('');
+    }
+  };
+
+  const handleAddThing = (e) => {
+    e?.preventDefault();
+    if (newThing.trim()) {
+      setThingsToCarry(prev => [...prev, newThing.trim()]);
+      setNewThing('');
+    }
+  };
+
   // Submit & Save
   const handleSaveExperience = async (e) => {
     e.preventDefault();
@@ -219,15 +423,19 @@ export default function CreateEditExperiencePage() {
       alert("Please sign in as a host.");
       return;
     }
-    if (!title || !description) {
-      alert("Please provide at least a title and description.");
+    if (!title.trim() || !description.trim()) {
+      alert("Please provide at least a title and overview story.");
       return;
     }
-    if (!pdfUrl) {
-      const confirmContinue = window.confirm(
-        "Notice: You haven't uploaded an Itinerary PDF brochure yet. We strongly recommend uploading the PDF containing the complete day-by-day plan, inclusions, exclusions, and rules.\n\nDo you want to proceed anyway?"
+
+    const hasDaysFilled = days.some(d => d.dayTitle?.trim() || (d.activities && d.activities.some(a => a.activityTitle?.trim())));
+    const hasPdfAttached = Boolean(pdfUrl?.trim());
+
+    if (!hasDaysFilled && !hasPdfAttached) {
+      const proceed = window.confirm(
+        "Notice: You haven't added any Day-by-Day schedule details or uploaded an Itinerary PDF brochure.\n\nWe recommend providing at least one format so travellers understand the journey plan. Do you want to submit anyway?"
       );
-      if (!confirmContinue) return;
+      if (!proceed) return;
     }
 
     setIsSubmitting(true);
@@ -241,7 +449,7 @@ export default function CreateEditExperiencePage() {
         city: city.trim(),
         price: Number(price) || 0,
         maxGroupSize: Number(maxGroupSize) || 10,
-        durationDays: Number(durationDays) || 1,
+        durationDays: Number(durationDays) || (days.length > 0 ? days.length : 1),
         durationNights: Number(durationNights) || 0,
         fitnessLevel,
         meetingPoint: meetingPoint.trim(),
@@ -250,8 +458,12 @@ export default function CreateEditExperiencePage() {
         images: galleryImages.length > 0 ? galleryImages : [coverImage].filter(Boolean),
         galleryImages,
         pdfUrl: pdfUrl || '',
-        pdfName: pdfName || 'Itinerary_Document.pdf',
-        routePins,
+        pdfName: pdfName || (pdfUrl ? 'Itinerary_Document.pdf' : ''),
+        days: days,
+        inclusions: inclusions,
+        exclusions: exclusions,
+        thingsToCarry: thingsToCarry,
+        routePins: routePins,
         guideId: currentUser.uid,
         guideName: userProfile?.name || currentUser.displayName || 'Verified Guide',
         guideImage: userProfile?.profilePicUrl || currentUser.photoURL || '',
@@ -295,13 +507,13 @@ export default function CreateEditExperiencePage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl bg-white border border-neutral-200 text-neutral-600 hover:text-neutral-900"
+              className="p-2 rounded-xl bg-white border border-neutral-200 text-neutral-600 hover:text-neutral-900 shadow-2xs"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div>
               <span className="text-[10px] font-bold text-guide-navy uppercase tracking-wider block">
-                ITINERARY STUDIO · DIRECT PDF UPLOADER
+                THE LOCALS · ITINERARY STUDIO
               </span>
               <h1 className="text-xl sm:text-2xl font-black font-sans text-neutral-900">
                 {isEditing ? 'Edit Expedition Itinerary' : 'Create New Expedition'}
@@ -497,7 +709,7 @@ export default function CreateEditExperiencePage() {
                     <p className="text-[11px] text-neutral-400">High-res landscape photograph</p>
                   </div>
                 )}
-                
+
                 <div className="space-y-2">
                   <label className="inline-block px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors">
                     {uploadingCover ? 'Uploading...' : 'Upload Cover Photo'}
@@ -583,200 +795,629 @@ export default function CreateEditExperiencePage() {
             </div>
           </div>
 
-          {/* Section 3: ITINERARY PDF UPLOAD & MANDATORY NOTICE */}
-          <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
-            <div className="flex items-center justify-between">
+          {/* Section 3: ITINERARY FORMAT SELECTOR (DUAL OPTIONS) */}
+          <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-guide-navy" />
-                  3. Upload Complete Itinerary Brochure (PDF)
+                <span className="text-[10px] font-bold text-guide-navy uppercase tracking-wider block">
+                  ITINERARY PRESENTATION OPTIONS
+                </span>
+                <h3 className="font-extrabold text-base text-neutral-900 mt-0.5">
+                  Choose How You Want to Present the Itinerary
                 </h3>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Directly upload your official brochure. Inclusions, day-wise schedule, pricing, packing & rules are included in the PDF.
+                <p className="text-xs text-neutral-500 mt-1">
+                  Upload a ready-made PDF brochure, build a structured day-by-day plan, or provide both.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowSamplePdfModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-guide-navy hover:bg-cyan-100 font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5 text-cyan-600" />
-                <span>View Sample PDF Format</span>
-              </button>
-            </div>
+              {/* Mode Toggle Buttons */}
+              <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setItineraryMode('both')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    itineraryMode === 'both'
+                      ? 'bg-guide-primary text-white shadow-sm'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Both (Recommended)</span>
+                </button>
 
-            {/* MANDATORY NOTICE BANNER */}
-            <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50/80 via-blue-50/40 to-white p-5 space-y-3.5">
-              <div className="flex items-center gap-2 text-guide-navy">
-                <Info className="w-5 h-5 flex-shrink-0 text-guide-primary" />
-                <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                  Important Notice: What Your Uploaded PDF Must Contain
-                </h4>
-              </div>
-              
-              <p className="text-xs text-neutral-700 leading-relaxed">
-                Rather than filling out separate forms, your uploaded PDF acts as the verified, complete document for travellers. Please ensure your PDF brochure includes the following sections (refer to the sample PDF):
-              </p>
+                <button
+                  type="button"
+                  onClick={() => setItineraryMode('days')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    itineraryMode === 'days'
+                      ? 'bg-guide-primary text-white shadow-sm'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Day-by-Day Builder</span>
+                </button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-neutral-700">
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">1. Day-by-Day Detailed Plan</span>
-                    <span className="text-[11px] text-neutral-500">Arrival, daily activities, trek hours, and overnight stay locations.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">2. Inclusions & Exclusions</span>
-                    <span className="text-[11px] text-neutral-500">Vehicles, meals, stays, guides vs extra expenses & entry passes.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">3. Pricing Tiers & Booking Steps</span>
-                    <span className="text-[11px] text-neutral-500">Double / Triple sharing costs, seat advance deposit & payment details.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">4. Things to Carry (Packing List)</span>
-                    <span className="text-[11px] text-neutral-500">Clothing layers, trekking footwear, medication, luggage limits & powerbanks.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">5. Terms & Cancellation Policy</span>
-                    <span className="text-[11px] text-neutral-500">Strict refund rules, vehicle regulations, safety guidelines & alcohol bans.</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-neutral-900 block">6. Local Trivia, Manners & FAQs</span>
-                    <span className="text-[11px] text-neutral-500">Inner Line Permits (ILP), mountain manners, network, ATMs & host bios.</span>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setItineraryMode('pdf')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    itineraryMode === 'pdf'
+                      ? 'bg-guide-primary text-white shadow-sm'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Direct PDF Upload</span>
+                </button>
               </div>
             </div>
 
-            {/* PDF UPLOAD BOX */}
-            <div className="space-y-3">
-              <label className="block text-xs font-bold uppercase text-neutral-700">
-                Itinerary PDF Document *
-              </label>
+            <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 text-xs text-sky-900 flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+              <div>
+                {itineraryMode === 'both' && (
+                  <span>
+                    <strong>Both Enabled:</strong> Travellers will see your interactive day-by-day activity timeline AND have a download button for your official PDF brochure document.
+                  </span>
+                )}
+                {itineraryMode === 'days' && (
+                  <span>
+                    <strong>Day-by-Day Builder:</strong> Build your detailed daily itinerary, accommodation/stay, meals, and activities step-by-step without requiring a PDF file.
+                  </span>
+                )}
+                {itineraryMode === 'pdf' && (
+                  <span>
+                    <strong>Direct PDF Upload:</strong> Quickly upload your ready-made itinerary brochure. Travellers will download and view your verified document directly.
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
 
-              {pdfUrl ? (
-                <div className="p-4 rounded-2xl bg-emerald-50/80 border-2 border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-                      <FileText className="w-6 h-6" />
+          {/* DAY-BY-DAY ITINERARY BUILDER (Visible in 'both' and 'days' modes) */}
+          {(itineraryMode === 'both' || itineraryMode === 'days') && (
+            <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-guide-navy" />
+                    Day-by-Day Schedule & Lodging Builder
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Structure each day with titles, accommodation details, meals included, and specific activity timelines.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={addDay}
+                  className="px-4 py-2 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Day</span>
+                </button>
+              </div>
+
+              {/* Day Cards List */}
+              <div className="space-y-6">
+                {days.map((day, dayIdx) => (
+                  <div key={dayIdx} className="p-5 rounded-2xl border border-neutral-200 bg-neutral-50/60 space-y-4">
+                    {/* Day Title Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-200/80">
+                      <div className="flex items-center gap-2.5 flex-1">
+                        <span className="w-8 h-8 rounded-xl bg-guide-navy text-white text-xs font-extrabold flex items-center justify-center flex-shrink-0 shadow-xs">
+                          D{day.dayNumber || dayIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={day.dayTitle}
+                          onChange={(e) => updateDayField(dayIdx, 'dayTitle', e.target.value)}
+                          placeholder={`Day ${day.dayNumber || dayIdx + 1} Title (e.g. Drive to Basecamp & Acclimatization)`}
+                          className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs font-bold text-neutral-800 bg-white"
+                        />
+                      </div>
+
+                      {days.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeDay(dayIdx)}
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 flex items-center gap-1 text-xs font-semibold self-end sm:self-center transition-colors"
+                          title="Remove Day"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          <span>Remove Day</span>
+                        </button>
+                      )}
                     </div>
+
+                    {/* Accommodation & Lodging Information */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-neutral-500 mb-1 flex items-center gap-1">
+                          <Bed className="w-3.5 h-3.5 text-guide-navy" />
+                          Stay / Accommodation
+                        </label>
+                        <input
+                          type="text"
+                          value={day.accommodation}
+                          onChange={(e) => {
+                            updateDayField(dayIdx, 'accommodation', e.target.value);
+                            if (!day.accommodationMapsUrl || day.accommodationMapsUrl.includes('google.com/maps')) {
+                              updateDayField(dayIdx, 'accommodationMapsUrl', e.target.value.trim() ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.target.value.trim())}` : '');
+                            }
+                          }}
+                          placeholder="e.g. Hotel Japfu Kohima / Alpine Tents / Village Homestay"
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-semibold bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-neutral-500 mb-1 flex items-center gap-1">
+                          <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                          Stay Google Maps Link (Auto or Custom)
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={day.accommodationMapsUrl || ''}
+                            onChange={(e) => updateDayField(dayIdx, 'accommodationMapsUrl', e.target.value)}
+                            placeholder="https://maps.google.com/?q=..."
+                            className="flex-1 px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-700"
+                          />
+                          {day.accommodation && (
+                            <a
+                              href={day.accommodationMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(day.accommodation)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-50 transition-colors flex-shrink-0"
+                              title="Test lodging on Google Maps"
+                            >
+                              <ExternalLink className="w-3 h-3 text-emerald-600" />
+                              <span>Map</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Meals Included Chips */}
                     <div>
-                      <span className="text-sm font-bold text-emerald-950 block truncate max-w-md">
-                        {pdfName || 'Itinerary_Brochure.pdf'}
-                      </span>
-                      <span className="text-xs text-emerald-700 flex items-center gap-1 font-medium mt-0.5">
-                        <Check className="w-3.5 h-3.5" />
-                        PDF attached and ready for travellers
-                      </span>
+                      <label className="block text-[11px] font-bold uppercase text-neutral-500 mb-1.5 flex items-center gap-1">
+                        <Utensils className="w-3.5 h-3.5 text-emerald-600" />
+                        Meals Included for Day {day.dayNumber || dayIdx + 1}
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {['Breakfast', 'Lunch', 'Dinner', 'Evening Tea & Snacks'].map((meal) => {
+                          const isSelected = (day.mealsIncluded || []).includes(meal);
+                          return (
+                            <button
+                              key={meal}
+                              type="button"
+                              onClick={() => toggleDayMeal(dayIdx, meal)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                                isSelected
+                                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                  : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-100'
+                              }`}
+                            >
+                              {isSelected ? `✓ ${meal}` : `+ ${meal}`}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
+
+                    {/* Activities Timeline Inside Day */}
+                    <div className="pt-3 border-t border-neutral-200/70 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-neutral-800 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-guide-navy" />
+                          Activity Timeline ({day.activities?.length || 0})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => addActivityToDay(dayIdx)}
+                          className="px-3 py-1 rounded-lg bg-white border border-neutral-300 hover:bg-neutral-100 text-guide-navy text-xs font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Activity</span>
+                        </button>
+                      </div>
+
+                      {(!day.activities || day.activities.length === 0) ? (
+                        <p className="text-[11px] text-neutral-400 italic bg-white p-3 rounded-xl border border-neutral-200">
+                          No activities added for this day yet. Click "Add Activity" above.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {day.activities.map((act, actIdx) => (
+                            <div key={actIdx} className="p-3.5 rounded-xl bg-white border border-neutral-200 space-y-2 shadow-2xs">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={act.time}
+                                  onChange={(e) => updateActivityField(dayIdx, actIdx, 'time', e.target.value)}
+                                  placeholder="Time (e.g. 08:30 AM)"
+                                  className="w-28 px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs font-bold text-neutral-700 bg-neutral-50"
+                                />
+                                <input
+                                  type="text"
+                                  value={act.activityTitle}
+                                  onChange={(e) => updateActivityField(dayIdx, actIdx, 'activityTitle', e.target.value)}
+                                  placeholder="Activity Title (e.g. Guided Nature Trail to Dzukou Lily Ridge)"
+                                  className="flex-1 px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs font-bold text-neutral-800"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeActivityFromDay(dayIdx, actIdx)}
+                                  className="p-1.5 text-neutral-400 hover:text-rose-500 rounded-lg transition-colors"
+                                  title="Remove Activity"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  value={act.location || ''}
+                                  onChange={(e) => updateActivityField(dayIdx, actIdx, 'location', e.target.value)}
+                                  placeholder="Location / Spot (e.g. Jakhama Trailhead)"
+                                  className="px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-600"
+                                />
+                                <input
+                                  type="text"
+                                  value={act.description || ''}
+                                  onChange={(e) => updateActivityField(dayIdx, actIdx, 'description', e.target.value)}
+                                  placeholder="Short briefing or instructions for travellers..."
+                                  className="px-2.5 py-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-600"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+
+              {/* Inclusions, Exclusions & Packing Checklist */}
+              <div className="pt-4 border-t border-neutral-200 space-y-6">
+                <div>
+                  <h4 className="font-extrabold text-sm text-neutral-900 flex items-center gap-2">
+                    <Package className="w-4 h-4 text-guide-navy" />
+                    Inclusions, Exclusions & Things to Carry Checklist
+                  </h4>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Provide the clear items that travellers need to pack and know beforehand.
+                  </p>
+                </div>
+
+                {/* What's Included */}
+                <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-3">
+                  <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    What's Included ({inclusions.length})
+                  </span>
+
+                  <div className="flex flex-wrap gap-2">
+                    {inclusions.map((item, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-emerald-300 text-xs font-semibold text-emerald-950 shadow-2xs">
+                        <span>{item}</span>
+                        <button
+                          type="button"
+                          onClick={() => setInclusions(inclusions.filter((_, i) => i !== idx))}
+                          className="hover:text-rose-500 text-neutral-400"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
-                    >
-                      <Eye className="w-4 h-4" />
-                      <span>View PDF</span>
-                    </a>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newInclusion}
+                      onChange={(e) => setNewInclusion(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddInclusion(); } }}
+                      placeholder="Add included item (e.g. Certified local guide, tent accommodation)..."
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs bg-white"
+                    />
                     <button
                       type="button"
-                      onClick={() => { setPdfUrl(''); setPdfName(''); }}
-                      className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      onClick={handleAddInclusion}
+                      className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Remove</span>
+                      Add
                     </button>
                   </div>
                 </div>
-              ) : (
-                <div className="p-8 rounded-2xl border-2 border-dashed border-neutral-300 hover:border-guide-primary text-center space-y-4 transition-colors bg-neutral-50/50">
-                  <div className="w-12 h-12 rounded-2xl bg-guide-primary/10 text-guide-primary mx-auto flex items-center justify-center">
-                    <FileDown className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-neutral-800">
-                      Upload your Full Itinerary Brochure (PDF)
-                    </p>
-                    <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
-                      Travellers will directly read and download this verified document containing the full schedule, inclusions, pricing, and rules.
-                    </p>
+
+                {/* What's Excluded */}
+                <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-200 space-y-3">
+                  <span className="text-xs font-bold text-rose-950 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    What's Excluded ({exclusions.length})
+                  </span>
+
+                  <div className="flex flex-wrap gap-2">
+                    {exclusions.map((item, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-rose-300 text-xs font-semibold text-rose-950 shadow-2xs">
+                        <span>{item}</span>
+                        <button
+                          type="button"
+                          onClick={() => setExclusions(exclusions.filter((_, i) => i !== idx))}
+                          className="hover:text-rose-600 text-neutral-400"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
                   </div>
 
-                  <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white text-xs font-bold cursor-pointer transition-colors shadow-md">
-                    {uploadingPdf ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Uploading PDF Document...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4" />
-                        <span>Choose PDF File</span>
-                      </>
-                    )}
+                  <div className="flex gap-2">
                     <input
-                      type="file"
-                      accept="application/pdf"
-                      disabled={uploadingPdf}
-                      className="hidden"
-                      onChange={(e) => handlePdfUpload(e.target.files?.[0])}
+                      type="text"
+                      value={newExclusion}
+                      onChange={(e) => setNewExclusion(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddExclusion(); } }}
+                      placeholder="Add excluded item (e.g. Personal gear, airfare, festival pass)..."
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs bg-white"
                     />
-                  </label>
+                    <button
+                      type="button"
+                      onClick={handleAddExclusion}
+                      className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
 
-                  <div className="pt-2">
-                    <span className="text-[11px] text-neutral-400 block mb-1">Or paste an existing PDF URL:</span>
-                    <div className="flex max-w-md mx-auto gap-2">
-                      <input
-                        type="url"
-                        placeholder="https://.../itinerary.pdf"
-                        value={customPdfUrl}
-                        onChange={(e) => setCustomPdfUrl(e.target.value)}
-                        className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs bg-white"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (customPdfUrl.trim()) {
-                            setPdfUrl(customPdfUrl.trim());
-                            setPdfName('Attached_Itinerary.pdf');
-                            setCustomPdfUrl('');
-                          }
-                        }}
-                        className="px-3.5 py-1.5 rounded-xl bg-neutral-800 text-white text-xs font-bold"
-                      >
-                        Attach
-                      </button>
+                {/* Things to Carry */}
+                <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 space-y-3">
+                  <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                    <Luggage className="w-4 h-4 text-amber-600" />
+                    Things to Carry / Packing List ({thingsToCarry.length})
+                  </span>
+
+                  <div className="flex flex-wrap gap-2">
+                    {thingsToCarry.map((item, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-amber-300 text-xs font-semibold text-amber-950 shadow-2xs">
+                        <span>{item}</span>
+                        <button
+                          type="button"
+                          onClick={() => setThingsToCarry(thingsToCarry.filter((_, i) => i !== idx))}
+                          className="hover:text-rose-500 text-neutral-400"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newThing}
+                      onChange={(e) => setNewThing(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddThing(); } }}
+                      placeholder="Add essential item (e.g. Trekking shoes, powerbank, rain poncho)..."
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddThing}
+                      className="px-4 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section: ITINERARY PDF UPLOAD (Visible in 'both' and 'pdf' modes) */}
+          {(itineraryMode === 'both' || itineraryMode === 'pdf') && (
+            <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-guide-navy" />
+                    Complete Itinerary Brochure (PDF)
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Directly upload your official brochure. Travellers can download and view this document directly.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSamplePdfModal(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-guide-navy hover:bg-cyan-100 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5 text-cyan-600" />
+                  <span>View Sample PDF Format</span>
+                </button>
+              </div>
+
+              {/* NOTICE BANNER */}
+              <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50/80 via-blue-50/40 to-white p-5 space-y-3.5">
+                <div className="flex items-center gap-2 text-guide-navy">
+                  <Info className="w-5 h-5 flex-shrink-0 text-guide-primary" />
+                  <h4 className="font-extrabold text-xs uppercase tracking-wider">
+                    Notice: What Your Uploaded PDF Should Contain
+                  </h4>
+                </div>
+                
+                <p className="text-xs text-neutral-700 leading-relaxed">
+                  Your uploaded PDF brochure provides travellers with a permanent, comprehensive document. We recommend including:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-neutral-700">
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">1. Day-by-Day Detailed Plan</span>
+                      <span className="text-[11px] text-neutral-500">Arrival, daily activities, trek hours, and overnight stay locations.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">2. Inclusions & Exclusions</span>
+                      <span className="text-[11px] text-neutral-500">Vehicles, meals, stays, guides vs extra expenses & entry passes.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">3. Pricing Tiers & Booking Steps</span>
+                      <span className="text-[11px] text-neutral-500">Double / Triple sharing costs, seat advance deposit & payment details.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">4. Things to Carry (Packing List)</span>
+                      <span className="text-[11px] text-neutral-500">Clothing layers, trekking footwear, medication, luggage limits & powerbanks.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">5. Terms & Cancellation Policy</span>
+                      <span className="text-[11px] text-neutral-500">Strict refund rules, vehicle regulations, safety guidelines & alcohol bans.</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-neutral-900 block">6. Local Trivia, Manners & FAQs</span>
+                      <span className="text-[11px] text-neutral-500">Inner Line Permits (ILP), mountain manners, network, ATMs & host bios.</span>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* PDF UPLOAD BOX */}
+              <div className="space-y-3">
+                <label className="block text-xs font-bold uppercase text-neutral-700">
+                  Itinerary PDF Document
+                </label>
+
+                {pdfUrl ? (
+                  <div className="p-4 rounded-2xl bg-emerald-50/80 border-2 border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-bold text-emerald-950 block truncate max-w-md">
+                          {pdfName || 'Itinerary_Brochure.pdf'}
+                        </span>
+                        <span className="text-xs text-emerald-700 flex items-center gap-1 font-medium mt-0.5">
+                          <Check className="w-3.5 h-3.5" />
+                          PDF attached and ready for travellers
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View PDF</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => { setPdfUrl(''); setPdfName(''); }}
+                        className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 rounded-2xl border-2 border-dashed border-neutral-300 hover:border-guide-primary text-center space-y-4 transition-colors bg-neutral-50/50">
+                    <div className="w-12 h-12 rounded-2xl bg-guide-primary/10 text-guide-primary mx-auto flex items-center justify-center">
+                      <FileDown className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-neutral-800">
+                        Upload your Full Itinerary Brochure (PDF)
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
+                        Travellers will directly read and download this verified document containing the full schedule, inclusions, pricing, and rules.
+                      </p>
+                    </div>
+
+                    <label className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white text-xs font-bold cursor-pointer transition-colors shadow-md">
+                      {uploadingPdf ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Uploading PDF Document...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span>Choose PDF File</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        disabled={uploadingPdf}
+                        className="hidden"
+                        onChange={(e) => handlePdfUpload(e.target.files?.[0])}
+                      />
+                    </label>
+
+                    <div className="pt-2">
+                      <span className="text-[11px] text-neutral-400 block mb-1">Or paste an existing PDF URL:</span>
+                      <div className="flex max-w-md mx-auto gap-2">
+                        <input
+                          type="url"
+                          placeholder="https://.../itinerary.pdf"
+                          value={customPdfUrl}
+                          onChange={(e) => setCustomPdfUrl(e.target.value)}
+                          className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-200 text-xs bg-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (customPdfUrl.trim()) {
+                              setPdfUrl(customPdfUrl.trim());
+                              setPdfName('Attached_Itinerary.pdf');
+                              setCustomPdfUrl('');
+                            }
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-neutral-800 text-white text-xs font-bold"
+                        >
+                          Attach
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Section 4: Meeting Spot, Hotels & Google Maps */}
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-5 shadow-xs">

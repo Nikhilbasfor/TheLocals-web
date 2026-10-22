@@ -2,10 +2,10 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Home,
   Compass, 
   Ticket, 
   User, 
+  Users,
   LayoutDashboard, 
   Layers, 
   CalendarCheck 
@@ -15,8 +15,8 @@ export default function BottomNav() {
   const { isGuide, currentUser } = useAuth();
 
   const travellerTabs = [
-    { label: 'Home', path: currentUser ? '/dashboard' : '/explore', icon: Home },
     { label: 'Explore', path: '/explore', icon: Compass },
+    { label: 'Guides', path: '/guides', icon: Users },
     { label: 'Bookings', path: currentUser ? '/bookings' : '/login?role=traveller', icon: Ticket },
     { label: 'Profile', path: currentUser ? '/profile' : '/login?role=traveller', icon: User },
   ];

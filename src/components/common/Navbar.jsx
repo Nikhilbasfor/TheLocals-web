@@ -25,21 +25,28 @@ export default function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [hostAuthModalOpen, setHostAuthModalOpen] = useState(false);
 
   const handlePortalSwitch = () => {
     if (isGuide) {
       setRole('traveller');
-      navigate(currentUser ? '/dashboard' : '/explore');
+      navigate('/explore');
     } else {
-      setRole('guide');
       if (currentUser) {
-        if (!userProfile?.onboardingComplete) {
-          navigate('/guide/onboarding');
+        if (userProfile?.role === 'guide') {
+          setRole('guide');
+          if (userProfile?.verified) {
+            navigate('/guide/dashboard');
+          } else {
+            navigate('/guide/onboarding');
+          }
         } else {
-          navigate('/guide/dashboard');
+          // Traveller wanting to host
+          setHostAuthModalOpen(true);
         }
       } else {
-        navigate('/login?role=guide');
+        // Not signed in: open Host Action Modal with direct Sign In button and Register button
+        setHostAuthModalOpen(true);
       }
     }
   };
@@ -57,14 +64,14 @@ export default function Navbar() {
 
   // Determine home link
   const homePath = isGuide 
-    ? "/guide/dashboard" 
-    : (currentUser ? "/dashboard" : "/");
+    ? (userProfile?.verified ? "/guide/dashboard" : "/guide/onboarding")
+    : "/explore";
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-cardBorder">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand / Logo (Links to Dashboard as requested) */}
+        {/* Brand / Logo */}
         <Link to={homePath} className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-full overflow-hidden p-1 bg-white shadow-sm border border-neutral-200 group-hover:scale-105 transition-transform">
             <img src="/app_logo.png" alt="The Locals" className="w-full h-full object-contain" />
@@ -88,15 +95,6 @@ export default function Navbar() {
           {!isGuide ? (
             <>
               <Link
-                to="/dashboard"
-                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/dashboard') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
-                }`}
-              >
-                <Home className="w-4 h-4 text-traveller-mint" />
-                Dashboard
-              </Link>
-              <Link
                 to="/explore"
                 className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
                   isActive('/explore') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
@@ -104,6 +102,15 @@ export default function Navbar() {
               >
                 <Compass className="w-4 h-4 text-traveller-mint" />
                 Explore
+              </Link>
+              <Link
+                to="/guides"
+                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+                  isActive('/guides') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
+                }`}
+              >
+                <Users className="w-4 h-4 text-indigo-700" />
+                Verified Guides
               </Link>
               <Link
                 to="/bookings"
@@ -122,15 +129,6 @@ export default function Navbar() {
               >
                 <Heart className="w-4 h-4 text-red-500" />
                 Wishlist
-              </Link>
-              <Link
-                to="/guides"
-                className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
-                  isActive('/guides') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
-                }`}
-              >
-                <Users className="w-4 h-4 text-indigo-700" />
-                Verified Guides
               </Link>
             </>
           ) : (
@@ -280,20 +278,20 @@ export default function Navbar() {
           {!isGuide ? (
             <>
               <Link
-                to="/dashboard"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                <Home className="w-4 h-4 text-traveller-mint" />
-                Dashboard
-              </Link>
-              <Link
                 to="/explore"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
                 <Compass className="w-4 h-4 text-traveller-mint" />
                 Explore Expeditions
+              </Link>
+              <Link
+                to="/guides"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              >
+                <Users className="w-4 h-4 text-indigo-700" />
+                Verified Guides
               </Link>
               <Link
                 to="/bookings"
@@ -310,14 +308,6 @@ export default function Navbar() {
               >
                 <Heart className="w-4 h-4 text-red-500" />
                 Saved Wishlist
-              </Link>
-              <Link
-                to="/guides"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                <Users className="w-4 h-4 text-indigo-700" />
-                Verified Guides
               </Link>
             </>
           ) : (
@@ -366,7 +356,7 @@ export default function Navbar() {
               className="flex items-center gap-2 text-xs font-semibold text-neutral-700 py-2"
             >
               <Repeat className="w-4 h-4 text-neutral-500" />
-              {isGuide ? "Switch to Traveller View" : "Host an Experience"}
+              {isGuide ? "Switch to Traveller View" : "Host a Trip"}
             </button>
             <Link
               to="/"
@@ -375,6 +365,67 @@ export default function Navbar() {
             >
               Choose Portal
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Host Authentication Action Modal */}
+      {hostAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-neutral-100 text-neutral-800 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base sm:text-lg font-sans text-neutral-900">
+                    Host with THE LOCALS
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Share your homeland & lead authentic expeditions
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setHostAuthModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
+              Already registered as a local host or expedition leader? Sign in directly to manage your dashboard and itineraries. If you're new, follow the simple registration steps to get verified.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={() => {
+                  setHostAuthModalOpen(false);
+                  navigate('/login?role=guide');
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In as Host</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setHostAuthModalOpen(false);
+                  navigate('/signup?role=guide');
+                }}
+                className="w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-800 hover:bg-emerald-50 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="w-4 h-4 text-emerald-600" />
+                <span>Register as New Host</span>
+              </button>
+            </div>
+
+            <p className="text-[11px] text-center text-neutral-400">
+              Government ID verification required after onboarding.
+            </p>
           </div>
         </div>
       )}

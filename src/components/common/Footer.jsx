@@ -9,7 +9,7 @@ export default function Footer() {
         {/* Brand Pillars Banner */}
         <div className="py-4 px-6 rounded-2xl bg-traveller-forestDark text-white text-center mb-10 shadow-sm">
           <p className="text-xs sm:text-sm font-semibold tracking-wider text-emerald-200 uppercase">
-            Offbeat ★ Immersive ★ Sustainable ★ Travel and Learn
+            Locals ★ Offbeat ★ Immersive ★ Slow and Sustainable
           </p>
         </div>
 
@@ -27,26 +27,34 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Real 4 Best Famous Expeditions */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Expeditions</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Famous Expeditions</h4>
             <ul className="space-y-2 text-sm text-neutral-600">
-              <li><Link to="/explore?state=Uttarakhand" className="hover:text-traveller-mint transition-colors">Uttarakhand Treks</Link></li>
-              <li><Link to="/explore?state=Himachal%20Pradesh" className="hover:text-traveller-mint transition-colors">Himachal Valleys</Link></li>
-              <li><Link to="/explore?state=Ladakh" className="hover:text-traveller-mint transition-colors">High Altitude Ladakh</Link></li>
-              <li><Link to="/explore?category=Cultural" className="hover:text-traveller-mint transition-colors">Cultural Living</Link></li>
+              <li><Link to="/explore?state=Ladakh" className="hover:text-traveller-mint transition-colors">Chadar Frozen River Trek</Link></li>
+              <li><Link to="/explore?state=Uttarakhand" className="hover:text-traveller-mint transition-colors">Valley of Flowers & Hemkund</Link></li>
+              <li><Link to="/explore?state=Himachal%20Pradesh" className="hover:text-traveller-mint transition-colors">Pin Parvati Pass Traverse</Link></li>
+              <li><Link to="/explore?state=Nagaland" className="hover:text-traveller-mint transition-colors">Dzukou Valley & Hornbill Trail</Link></li>
             </ul>
           </div>
 
-          {/* Guide Host Community */}
+          {/* Contact Us - Email */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Host Portal</h4>
-            <ul className="space-y-2 text-sm text-neutral-600">
-              <li><Link to="/guide/onboarding" className="hover:text-guide-cyan transition-colors">Become a Local Host</Link></li>
-              <li><Link to="/guide/dashboard" className="hover:text-guide-cyan transition-colors">Host Dashboard</Link></li>
-              <li><Link to="/guide/create-experience" className="hover:text-guide-cyan transition-colors">Design Itinerary</Link></li>
-              <li><Link to="/login?role=guide" className="hover:text-guide-cyan transition-colors">Guide Sign In</Link></li>
-            </ul>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Contact Us</h4>
+            <div className="space-y-2 text-sm text-neutral-600">
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Have questions or need custom expedition planning? Email our support team:
+              </p>
+              <a 
+                href="mailto:support@thelocals.in" 
+                className="inline-flex items-center gap-1.5 font-bold text-traveller-forestDark hover:text-traveller-mint transition-colors text-sm underline underline-offset-4"
+              >
+                support@thelocals.in
+              </a>
+              <p className="text-[11px] text-neutral-400">
+                General inquiries: <a href="mailto:contact@thelocals.in" className="hover:underline text-neutral-500">contact@thelocals.in</a>
+              </p>
+            </div>
           </div>
         </div>
 

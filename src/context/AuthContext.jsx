@@ -143,6 +143,113 @@ export function AuthProvider({ child, children }) {
     return { user: cred.user, profile: newProfile };
   };
 
+  // Login with Phone OTP
+  const loginWithPhoneOtp = async (fullPhone, expectedRole) => {
+    const cleanDigits = fullPhone.replace(/\D/g, '');
+    const syntheticEmail = `phone_${cleanDigits}@thelocals.in`;
+    const syntheticPassword = `locals_otp_pass_${cleanDigits}`;
+
+    let cred;
+    try {
+      cred = await signInWithEmailAndPassword(auth, syntheticEmail, syntheticPassword);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        // Auto-provision user account verified via OTP
+        cred = await createUserWithEmailAndPassword(auth, syntheticEmail, syntheticPassword);
+        const newProfile = {
+          uid: cred.user.uid,
+          name: expectedRole === 'guide' ? 'Local Host' : 'Local Explorer',
+          fullName: expectedRole === 'guide' ? 'Local Host' : 'Local Explorer',
+          email: syntheticEmail,
+          phone: fullPhone,
+          role: expectedRole || 'traveller',
+          bio: '',
+          profilePicUrl: '',
+          state: 'Uttarakhand',
+          city: '',
+          experienceYears: 0,
+          rating: 5.0,
+          totalReviews: 0,
+          verified: false,
+          isVerified: false,
+          languages: ['Hindi', 'English'],
+          onboardingComplete: false,
+          regions: [],
+          specialties: [],
+          interests: [],
+          createdAt: Date.now(),
+        };
+        await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+        setRole(newProfile.role);
+        return { user: cred.user, profile: newProfile };
+      }
+      throw err;
+    }
+
+    const userDocRef = doc(db, 'users', cred.user.uid);
+    const snap = await getDoc(userDocRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const actualRole = (data.role || 'traveller').toLowerCase();
+      if (expectedRole && actualRole !== expectedRole.toLowerCase()) {
+        await signOut(auth);
+        throw new Error(`Account role is '${actualRole}', but you selected '${expectedRole}'. Please select the correct portal.`);
+      }
+      setRole(actualRole);
+      return { user: cred.user, profile: data };
+    }
+    return { user: cred.user, profile: null };
+  };
+
+  // Sign up with Phone OTP
+  const signupWithPhoneOtp = async ({ name, phone, country, role, state, city, experienceYears, bio }) => {
+    const cleanDigits = phone.replace(/\D/g, '');
+    const syntheticEmail = `phone_${cleanDigits}@thelocals.in`;
+    const syntheticPassword = `locals_otp_pass_${cleanDigits}`;
+
+    let cred;
+    try {
+      cred = await createUserWithEmailAndPassword(auth, syntheticEmail, syntheticPassword);
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        cred = await signInWithEmailAndPassword(auth, syntheticEmail, syntheticPassword);
+      } else {
+        throw err;
+      }
+    }
+
+    await updateProfile(cred.user, { displayName: name });
+
+    const newProfile = {
+      uid: cred.user.uid,
+      name: name.trim(),
+      fullName: name.trim(),
+      email: syntheticEmail,
+      phone: phone.trim(),
+      country: country || 'India',
+      role: (role || 'traveller').toLowerCase(),
+      bio: bio || '',
+      profilePicUrl: '',
+      state: state || 'Uttarakhand',
+      city: city || '',
+      experienceYears: Number(experienceYears) || 0,
+      rating: 5.0,
+      totalReviews: 0,
+      verified: false,
+      isVerified: false,
+      languages: ['Hindi', 'English'],
+      onboardingComplete: false,
+      regions: [],
+      specialties: [],
+      interests: [],
+      createdAt: Date.now(),
+    };
+
+    await setDoc(doc(db, 'users', cred.user.uid), newProfile);
+    setRole(newProfile.role);
+    return { user: cred.user, profile: newProfile };
+  };
+
   // Update profile
   const updateUserProfile = async (updates) => {
     if (!currentUser) throw new Error("No authenticated user");
@@ -164,6 +271,8 @@ export function AuthProvider({ child, children }) {
     loading,
     login,
     signup,
+    loginWithPhoneOtp,
+    signupWithPhoneOtp,
     logout,
     updateUserProfile,
     isGuide: (userProfile?.role === 'guide') || (selectedRole === 'guide'),

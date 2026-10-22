@@ -11,14 +11,10 @@ export default function RoleSelectionPage() {
   const handleSelectRole = (role) => {
     setRole(role);
     if (role === 'traveller') {
-      if (currentUser) {
-        navigate('/dashboard');
-      } else {
-        navigate('/login?role=traveller');
-      }
+      navigate('/explore');
     } else {
       if (currentUser) {
-        if (!userProfile?.onboardingComplete) {
+        if (!userProfile?.onboardingComplete || !userProfile?.verified) {
           navigate('/guide/onboarding');
         } else {
           navigate('/guide/dashboard');
@@ -81,7 +77,7 @@ export default function RoleSelectionPage() {
               Book an experience
             </h3>
             <p className="text-xs md:text-sm text-white/80 leading-relaxed mb-3 md:mb-5 line-clamp-2 sm:line-clamp-none">
-              Discover authentic guided expeditions, hidden valleys & verified local hosts.
+              Discover authentic guided expeditions, curated immersive experiences and verified local hosts.
             </p>
 
             <div className="flex items-center text-xs font-bold text-sky-300 gap-1.5 group-hover:translate-x-1 transition-transform">
@@ -108,7 +104,7 @@ export default function RoleSelectionPage() {
               Host an experience
             </h3>
             <p className="text-xs md:text-sm text-white/80 leading-relaxed mb-3 md:mb-5 line-clamp-2 sm:line-clamp-none">
-              Create itineraries, host expeditions & lead travellers through your homeland.
+              Create itineraries, host experiences and lead the travellers through your local homeland.
             </p>
 
             <div className="flex items-center text-xs font-bold text-emerald-300 gap-1.5 group-hover:translate-x-1 transition-transform">
@@ -121,7 +117,7 @@ export default function RoleSelectionPage() {
         {/* Footer Brand Pillars */}
         <div className="pb-2">
           <p className="text-[11px] md:text-xs font-semibold tracking-wider text-white/70 uppercase">
-            Offbeat ★ Immersive ★ Sustainable ★ Travel and Learn
+            Locals ★ Offbeat ★ Immersive ★ Slow and Sustainable
           </p>
         </div>
 
