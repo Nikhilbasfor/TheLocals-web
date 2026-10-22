@@ -795,109 +795,28 @@ export default function CreateEditExperiencePage() {
             </div>
           </div>
 
-          {/* Section 3: ITINERARY FORMAT SELECTOR (DUAL OPTIONS) */}
-          <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-4 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* DAY-BY-DAY ROUTINE & SCHEDULE BUILDER */}
+          <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
+            <div className="flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-guide-navy uppercase tracking-wider block">
-                  ITINERARY PRESENTATION OPTIONS
-                </span>
-                <h3 className="font-extrabold text-base text-neutral-900 mt-0.5">
-                  Choose How You Want to Present the Itinerary
+                <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-guide-navy" />
+                  Day-by-Day Routine & Schedule Maker
                 </h3>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Upload a ready-made PDF brochure, build a structured day-by-day plan, or provide both.
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Structure each day with titles, accommodation details, meals included, and specific activity timelines.
                 </p>
               </div>
 
-              {/* Mode Toggle Buttons */}
-              <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setItineraryMode('both')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    itineraryMode === 'both'
-                      ? 'bg-guide-primary text-white shadow-sm'
-                      : 'text-neutral-600 hover:text-neutral-900'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Both (Recommended)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setItineraryMode('days')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    itineraryMode === 'days'
-                      ? 'bg-guide-primary text-white shadow-sm'
-                      : 'text-neutral-600 hover:text-neutral-900'
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Day-by-Day Builder</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setItineraryMode('pdf')}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    itineraryMode === 'pdf'
-                      ? 'bg-guide-primary text-white shadow-sm'
-                      : 'text-neutral-600 hover:text-neutral-900'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Direct PDF Upload</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={addDay}
+                className="px-4 py-2 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Day</span>
+              </button>
             </div>
-
-            <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-200/80 text-xs text-sky-900 flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
-              <div>
-                {itineraryMode === 'both' && (
-                  <span>
-                    <strong>Both Enabled:</strong> Travellers will see your interactive day-by-day activity timeline AND have a download button for your official PDF brochure document.
-                  </span>
-                )}
-                {itineraryMode === 'days' && (
-                  <span>
-                    <strong>Day-by-Day Builder:</strong> Build your detailed daily itinerary, accommodation/stay, meals, and activities step-by-step without requiring a PDF file.
-                  </span>
-                )}
-                {itineraryMode === 'pdf' && (
-                  <span>
-                    <strong>Direct PDF Upload:</strong> Quickly upload your ready-made itinerary brochure. Travellers will download and view your verified document directly.
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* DAY-BY-DAY ITINERARY BUILDER (Visible in 'both' and 'days' modes) */}
-          {(itineraryMode === 'both' || itineraryMode === 'days') && (
-            <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-guide-navy" />
-                    Day-by-Day Schedule & Lodging Builder
-                  </h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">
-                    Structure each day with titles, accommodation details, meals included, and specific activity timelines.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={addDay}
-                  className="px-4 py-2 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Day</span>
-                </button>
-              </div>
 
               {/* Day Cards List */}
               <div className="space-y-6">
@@ -1220,101 +1139,40 @@ export default function CreateEditExperiencePage() {
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Section: ITINERARY PDF UPLOAD (Visible in 'both' and 'pdf' modes) */}
-          {(itineraryMode === 'both' || itineraryMode === 'pdf') && (
-            <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
-              <div className="flex items-center justify-between">
-                <div>
+          {/* Section: ITINERARY PDF UPLOAD (OPTIONAL) */}
+          <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
                   <h3 className="font-bold text-base text-neutral-900 flex items-center gap-2">
                     <FileText className="w-5 h-5 text-guide-navy" />
-                    Complete Itinerary Brochure (PDF)
+                    Itinerary Brochure (PDF)
                   </h3>
-                  <p className="text-xs text-neutral-500 mt-0.5">
-                    Directly upload your official brochure. Travellers can download and view this document directly.
-                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-600 border border-neutral-200">
+                    Optional
+                  </span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowSamplePdfModal(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-guide-navy hover:bg-cyan-100 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors"
-                >
-                  <Eye className="w-3.5 h-3.5 text-cyan-600" />
-                  <span>View Sample PDF Format</span>
-                </button>
-              </div>
-
-              {/* NOTICE BANNER */}
-              <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50/80 via-blue-50/40 to-white p-5 space-y-3.5">
-                <div className="flex items-center gap-2 text-guide-navy">
-                  <Info className="w-5 h-5 flex-shrink-0 text-guide-primary" />
-                  <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                    Notice: What Your Uploaded PDF Should Contain
-                  </h4>
-                </div>
-                
-                <p className="text-xs text-neutral-700 leading-relaxed">
-                  Your uploaded PDF brochure provides travellers with a permanent, comprehensive document. We recommend including:
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Attach a ready-made PDF brochure if you have one. Travellers can download and view this document directly.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs text-neutral-700">
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">1. Day-by-Day Detailed Plan</span>
-                      <span className="text-[11px] text-neutral-500">Arrival, daily activities, trek hours, and overnight stay locations.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">2. Inclusions & Exclusions</span>
-                      <span className="text-[11px] text-neutral-500">Vehicles, meals, stays, guides vs extra expenses & entry passes.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">3. Pricing Tiers & Booking Steps</span>
-                      <span className="text-[11px] text-neutral-500">Double / Triple sharing costs, seat advance deposit & payment details.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">4. Things to Carry (Packing List)</span>
-                      <span className="text-[11px] text-neutral-500">Clothing layers, trekking footwear, medication, luggage limits & powerbanks.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">5. Terms & Cancellation Policy</span>
-                      <span className="text-[11px] text-neutral-500">Strict refund rules, vehicle regulations, safety guidelines & alcohol bans.</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2.5 bg-white p-3 rounded-xl border border-neutral-200/70 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-bold text-neutral-900 block">6. Local Trivia, Manners & FAQs</span>
-                      <span className="text-[11px] text-neutral-500">Inner Line Permits (ILP), mountain manners, network, ATMs & host bios.</span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              {/* PDF UPLOAD BOX */}
-              <div className="space-y-3">
-                <label className="block text-xs font-bold uppercase text-neutral-700">
-                  Itinerary PDF Document
-                </label>
+              <button
+                type="button"
+                onClick={() => setShowSamplePdfModal(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-cyan-50 border border-cyan-200 text-guide-navy hover:bg-cyan-100 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors self-start sm:self-auto"
+              >
+                <Eye className="w-3.5 h-3.5 text-cyan-600" />
+                <span>View Sample PDF Format</span>
+              </button>
+            </div>
+
+            {/* PDF UPLOAD BOX */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold uppercase text-neutral-700">
+                Itinerary PDF Document (Optional)
+              </label>
 
                 {pdfUrl ? (
                   <div className="p-4 rounded-2xl bg-emerald-50/80 border-2 border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1417,7 +1275,6 @@ export default function CreateEditExperiencePage() {
                 )}
               </div>
             </div>
-          )}
 
           {/* Section 4: Meeting Spot, Hotels & Google Maps */}
           <div className="bg-white rounded-3xl border border-neutral-200 p-6 sm:p-8 space-y-5 shadow-xs">

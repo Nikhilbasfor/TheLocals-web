@@ -66,9 +66,11 @@ export default function SignupPage() {
   const availableCities = STATE_CITIES_MAP[state] || [];
 
   const handleRoleToggle = (role) => {
-    setActiveRole(role);
-    setRole(role);
+    const lower = role.toLowerCase();
+    setActiveRole(lower);
+    setRole(lower);
     setError(null);
+    navigate(`/signup?role=${lower}`, { replace: true });
   };
 
   const handleSendOtp = () => {

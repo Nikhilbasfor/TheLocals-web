@@ -65,9 +65,11 @@ export default function LoginPage() {
   const isGuide = activeRole === 'guide';
 
   const handleRoleToggle = (role) => {
-    setActiveRole(role);
-    setRole(role);
+    const lower = role.toLowerCase();
+    setActiveRole(lower);
+    setRole(lower);
     setError(null);
+    navigate(`/login?role=${lower}`, { replace: true });
   };
 
   const handleSendOtp = () => {

@@ -294,7 +294,7 @@ export function AuthProvider({ child, children }) {
     logout,
     deleteAccount,
     updateUserProfile,
-    isGuide: (userProfile?.role === 'guide') || (selectedRole === 'guide'),
+    isGuide: selectedRole ? selectedRole === 'guide' : userProfile?.role === 'guide',
   };
 
   return (

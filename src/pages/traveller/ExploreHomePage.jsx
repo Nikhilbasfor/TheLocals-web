@@ -252,14 +252,15 @@ export default function ExploreHomePage() {
 
       <main className="min-h-screen pb-24 md:pb-16">
         
-        {/* Hero Section */}
-        <div className="relative bg-traveller-forestDark text-white overflow-hidden py-14 sm:py-20 px-4 sm:px-6 lg:px-8 shadow-md">
-          {/* Background photo overlay */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')" }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-traveller-forestDark via-transparent to-transparent" />
+        {/* Hero Section with Crystal Clear Mountain Scenery - No green filter */}
+        <div 
+          className="relative text-white overflow-hidden py-16 sm:py-24 px-4 sm:px-6 lg:px-8 shadow-lg bg-cover bg-center"
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=90')" 
+          }}
+        >
+          {/* Subtle natural dark gradient for text clarity - no green tint */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/60 pointer-events-none" />
 
           <div className="relative max-w-4xl mx-auto text-center space-y-4">
             <span className="text-xs font-extrabold tracking-widest text-emerald-300 uppercase px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 inline-block">
