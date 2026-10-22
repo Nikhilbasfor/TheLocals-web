@@ -130,17 +130,24 @@ export default function GuideDashboardPage() {
           </div>
         )}
 
-        {/* Welcome Banner (matching guide_dashboard_tab.dart) */}
-        <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-guide-headerNavy via-[#1E3A5F] to-[#2C4A7C] text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-xl font-bold text-white shrink-0 shadow-inner">
+        {/* Welcome Banner with Guide Expedition Background */}
+        <div 
+          className="rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative overflow-hidden bg-neutral-900 border border-white/10"
+          style={{
+            backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.78) 50%, rgba(30, 58, 95, 0.65) 100%), url('https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1600&q=80')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 40%',
+          }}
+        >
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-xl font-bold text-white shrink-0 shadow-lg">
               {initial}
             </div>
             <div>
-              <span className="text-[11px] font-bold tracking-widest text-white/70 uppercase">
-                Guide Dashboard
+              <span className="text-[11px] font-bold tracking-widest text-emerald-300 uppercase px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md inline-block">
+                Guide Portal &middot; Himalayan Lead
               </span>
-              <h1 className="text-xl sm:text-2xl font-black font-sans tracking-tight text-white mt-0.5">
+              <h1 className="text-xl sm:text-3xl font-black font-sans tracking-tight text-white mt-1">
                 {guideName}
               </h1>
             </div>
@@ -148,7 +155,7 @@ export default function GuideDashboardPage() {
 
           <Link
             to="/guide/create-experience"
-            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-sm self-stretch sm:self-auto justify-center"
+            className="relative z-10 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg self-stretch sm:self-auto justify-center"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Create Itinerary</span>

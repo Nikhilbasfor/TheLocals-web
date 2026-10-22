@@ -256,8 +256,8 @@ export default function ExploreHomePage() {
         <div className="relative bg-traveller-forestDark text-white overflow-hidden py-14 sm:py-20 px-4 sm:px-6 lg:px-8 shadow-md">
           {/* Background photo overlay */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-25"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80')" }}
+            className="absolute inset-0 bg-cover bg-center opacity-30"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')" }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-traveller-forestDark via-transparent to-transparent" />
 
@@ -484,23 +484,18 @@ export default function ExploreHomePage() {
                   <section key={zone.key} className="space-y-4">
                     {/* Zone Header Banner */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-neutral-200 gap-2">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl p-2 rounded-2xl bg-white shadow-xs border border-neutral-100">
-                          {zone.emoji}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2.5">
-                            <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight font-sans">
-                              {zone.title}
-                            </h2>
-                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-traveller-lightMint text-traveller-forestDark border border-traveller-mint/30">
-                              {zone.items.length} {zone.items.length === 1 ? 'Expedition' : 'Expeditions'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-neutral-500 mt-0.5">
-                            {zone.tagline}
-                          </p>
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight font-sans">
+                            {zone.title}
+                          </h2>
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-traveller-lightMint text-traveller-forestDark border border-traveller-mint/30">
+                            {zone.items.length} {zone.items.length === 1 ? 'Expedition' : 'Expeditions'}
+                          </span>
                         </div>
+                        <p className="text-xs text-neutral-500 mt-0.5">
+                          {zone.tagline}
+                        </p>
                       </div>
                     </div>
 
@@ -526,17 +521,17 @@ export default function ExploreHomePage() {
             </div>
           )}
 
-          {/* WHY CHOOSE THE LOCALS SECTION */}
-          <section className="mt-20 bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white rounded-3xl p-8 sm:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+          {/* WHY CHOOSE THE LOCALS SECTION (Mint Theme) */}
+          <section className="mt-20 bg-gradient-to-br from-[#E6F4EA] via-[#D1FAE5] to-[#ECFDF5] text-neutral-900 rounded-3xl p-8 sm:p-12 border border-emerald-200/90 shadow-lg relative overflow-hidden">
             <div className="max-w-4xl mx-auto space-y-8">
               <div className="text-center space-y-2">
-                <span className="text-xs font-extrabold tracking-widest text-emerald-400 uppercase bg-emerald-950/60 px-3.5 py-1 rounded-full border border-emerald-500/30 inline-block">
+                <span className="text-xs font-extrabold tracking-widest text-emerald-800 uppercase bg-emerald-100 px-3.5 py-1 rounded-full border border-emerald-300 inline-block shadow-2xs">
                   WHY CHOOSE THE LOCALS
                 </span>
-                <h2 className="text-2xl sm:text-4xl font-black tracking-tight font-sans">
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tight font-sans text-neutral-900">
                   Conscious Exploration Led by Native Voices
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-300 max-w-xl mx-auto leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 max-w-xl mx-auto leading-relaxed">
                   We are not another mass-commercial travel agency. Here is why our project is fundamentally different:
                 </p>
               </div>
@@ -544,60 +539,60 @@ export default function ExploreHomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 
                 {/* Solid Point 1 */}
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:bg-white/10 transition-colors">
+                <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-2 shadow-2xs hover:shadow-sm transition-all">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       1
                     </div>
-                    <h4 className="font-bold text-sm sm:text-base text-white">100% Native & Verified Local Hosts</h4>
+                    <h4 className="font-bold text-sm sm:text-base text-neutral-900">100% Native & Verified Local Hosts</h4>
                   </div>
-                  <p className="text-xs text-neutral-300 leading-relaxed pl-11">
+                  <p className="text-xs text-neutral-600 leading-relaxed pl-11">
                     Every expedition is led by born-and-raised indigenous mountain residents, certified guides, and elder trail storytellers with generational knowledge. Never outsourced city contractors.
                   </p>
                 </div>
 
                 {/* Solid Point 2 */}
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:bg-white/10 transition-colors">
+                <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-2 shadow-2xs hover:shadow-sm transition-all">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       2
                     </div>
-                    <h4 className="font-bold text-sm sm:text-base text-white">Intimate Micro-Groups & Slow Travel</h4>
+                    <h4 className="font-bold text-sm sm:text-base text-neutral-900">Intimate Micro-Groups & Slow Travel</h4>
                   </div>
-                  <p className="text-xs text-neutral-300 leading-relaxed pl-11">
+                  <p className="text-xs text-neutral-600 leading-relaxed pl-11">
                     Strict group caps of 2 to 8 explorers ensure deep cultural immersion, respectful footprint on fragile mountain ecosystems, and meaningful relationships with host families.
                   </p>
                 </div>
 
                 {/* Solid Point 3 */}
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:bg-white/10 transition-colors">
+                <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-2 shadow-2xs hover:shadow-sm transition-all">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                       3
                     </div>
-                    <h4 className="font-bold text-sm sm:text-base text-white">Direct Grassroots Economic Impact</h4>
+                    <h4 className="font-bold text-sm sm:text-base text-neutral-900">Direct Grassroots Economic Impact</h4>
                   </div>
-                  <p className="text-xs text-neutral-300 leading-relaxed pl-11">
+                  <p className="text-xs text-neutral-600 leading-relaxed pl-11">
                     Over 85% of expedition payments stay directly inside the remote valleys with homestay cooks, mountain porters, muleteers, and local artisan families, keeping remote communities alive.
                   </p>
                 </div>
 
                 {/* Solid Point 4 */}
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:bg-white/10 transition-colors">
+                <div className="p-5 rounded-2xl bg-white border border-emerald-200/80 space-y-2 shadow-2xs hover:shadow-sm transition-all">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-forest-dark text-white bg-traveller-forestDark flex items-center justify-center font-bold text-sm shadow-xs">
                       4
                     </div>
-                    <h4 className="font-bold text-sm sm:text-base text-white">Uncommercialized Secret Trails</h4>
+                    <h4 className="font-bold text-sm sm:text-base text-neutral-900">Uncommercialized Secret Trails</h4>
                   </div>
-                  <p className="text-xs text-neutral-300 leading-relaxed pl-11">
+                  <p className="text-xs text-neutral-600 leading-relaxed pl-11">
                     Escape overcrowded mass-tourism routes. Discover hidden sacred ridges, ancestral forager paths, forgotten monastic valleys, and authentic community harvest festivals.
                   </p>
                 </div>
               </div>
 
-              <div className="pt-2 text-center border-t border-white/10">
-                <p className="text-xs font-semibold text-emerald-300 tracking-wider uppercase">
+              <div className="pt-2 text-center border-t border-emerald-200/60">
+                <p className="text-xs font-bold text-emerald-800 tracking-wider uppercase">
                   Locals ★ Offbeat ★ Immersive ★ Slow and Sustainable
                 </p>
               </div>

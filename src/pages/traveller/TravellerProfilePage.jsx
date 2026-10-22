@@ -17,14 +17,19 @@ import {
   Repeat, 
   ShieldCheck, 
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 export default function TravellerProfilePage() {
   const navigate = useNavigate();
-  const { currentUser, userProfile, updateUserProfile, logout, setRole } = useAuth();
+  const { currentUser, userProfile, updateUserProfile, logout, deleteAccount, setRole } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState(userProfile?.name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [bio, setBio] = useState(userProfile?.bio || '');
@@ -84,6 +89,18 @@ export default function TravellerProfilePage() {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      navigate('/');
+    } catch (err) {
+      alert("Failed to delete account: " + err.message);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   if (!currentUser) {
@@ -290,22 +307,90 @@ export default function TravellerProfilePage() {
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="w-full p-4 rounded-2xl border border-red-100 hover:bg-red-50 text-red-600 transition-colors flex items-center justify-between text-left"
+              className="w-full p-4 rounded-2xl border border-neutral-200 hover:bg-neutral-50 text-neutral-700 transition-colors flex items-center justify-between text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-neutral-100 text-neutral-600 flex items-center justify-center">
                   <LogOut className="w-5 h-5" />
                 </div>
                 <div>
                   <h4 className="font-bold text-sm">Sign Out</h4>
-                  <p className="text-xs text-red-400">Log out of your account on this device</p>
+                  <p className="text-xs text-neutral-400">Log out of your account on this device</p>
                 </div>
               </div>
+            </button>
+
+            {/* Delete Account */}
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full p-4 rounded-2xl border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors flex items-center justify-between text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Delete Account</h4>
+                  <p className="text-xs text-rose-400">Permanently delete your profile and booking history</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-rose-500">Delete &gt;</span>
             </button>
           </div>
         </div>
 
       </main>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-neutral-100 text-neutral-400"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="font-black text-lg text-neutral-900 font-sans">Delete Account Permanently?</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                This action is irreversible. All your profile information, booking logs, and account records will be permanently removed.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl border border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/20"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete Forever</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
       <Footer />

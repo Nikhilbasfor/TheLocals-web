@@ -6,7 +6,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 
 const AuthContext = createContext();
@@ -263,6 +263,24 @@ export function AuthProvider({ child, children }) {
     setUserProfile(null);
   };
 
+  // Delete Account
+  const deleteAccount = async () => {
+    if (!currentUser) return;
+    const uid = currentUser.uid;
+    try {
+      await deleteDoc(doc(db, 'users', uid));
+    } catch (e) {
+      console.warn("Could not delete firestore user document:", e);
+    }
+    try {
+      await currentUser.delete();
+    } catch (e) {
+      console.warn("Could not delete firebase auth user:", e);
+    }
+    await signOut(auth);
+    setUserProfile(null);
+  };
+
   const value = {
     currentUser,
     userProfile,
@@ -274,6 +292,7 @@ export function AuthProvider({ child, children }) {
     loginWithPhoneOtp,
     signupWithPhoneOtp,
     logout,
+    deleteAccount,
     updateUserProfile,
     isGuide: (userProfile?.role === 'guide') || (selectedRole === 'guide'),
   };

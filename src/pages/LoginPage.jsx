@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../services/firebase';
@@ -26,6 +26,14 @@ export default function LoginPage() {
 
   const roleParam = searchParams.get('role') || 'traveller';
   const [activeRole, setActiveRole] = useState(roleParam.toLowerCase());
+  
+  useEffect(() => {
+    if (roleParam) {
+      const lower = roleParam.toLowerCase();
+      setActiveRole(lower);
+      setRole(lower);
+    }
+  }, [roleParam, setRole]);
   
   // Auth Mode: 'otp' (default) vs 'email'
   const [authMode, setAuthMode] = useState('otp');

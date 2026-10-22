@@ -135,28 +135,24 @@ export default function VerifiedGuidesPage() {
       key: 'north',
       title: 'North Guides & Leads',
       tagline: 'Himachal, Uttarakhand, Ladakh, Jammu & Kashmir verified leads',
-      emoji: '🏔️',
       items: northGuides,
     },
     {
       key: 'northeast',
       title: 'Northeast Guides & Leads',
       tagline: 'Sikkim, Nagaland, Meghalaya, Arunachal & Eastern Himalaya native hosts',
-      emoji: '🌿',
       items: northeastGuides,
     },
     {
       key: 'south',
       title: 'South Guides & Leads',
       tagline: 'Western Ghats, Wayanad rainforests & Nilgiri naturalists',
-      emoji: '🌊',
       items: southGuides,
     },
     {
       key: 'west',
       title: 'West Guides & Leads',
       tagline: 'Sahyadri mountain forts, Konkan coast & desert heritage',
-      emoji: '🌅',
       items: westGuides,
     },
   ];
@@ -167,23 +163,14 @@ export default function VerifiedGuidesPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen pb-24 md:pb-16 space-y-8">
         
-        {/* Header Banner */}
-        <div className="bg-guide-headerNavy text-white rounded-3xl p-6 sm:p-10 shadow-lg relative overflow-hidden">
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 flex items-center justify-center pointer-events-none">
-            <ShieldCheck className="w-64 h-64 text-white" />
-          </div>
-
-          <div className="relative max-w-2xl space-y-3">
-            <span className="text-[11px] font-extrabold tracking-widest text-emerald-300 uppercase px-3 py-1 rounded-full bg-white/10 backdrop-blur-md inline-block">
-              COMMUNITY DIRECTORY
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-black font-sans tracking-tight">
-              Verified Local Guides
-            </h1>
-            <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-normal">
-              Meet native mountain leads, trail historians, and high-altitude instructors verified with government credentials across the zones of India.
-            </p>
-          </div>
+        {/* Simple Clean Header replacing empty placeholder */}
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-neutral-900 tracking-tight font-sans">
+            Verified Guides
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 font-normal">
+            Meet certified mountain leads, trail historians, and high-altitude instructors across India.
+          </p>
         </div>
 
         {/* Search & State Filters */}
@@ -240,23 +227,18 @@ export default function VerifiedGuidesPage() {
               return (
                 <section key={zone.key} className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl p-2 rounded-2xl bg-white shadow-xs border border-neutral-100">
-                        {zone.emoji}
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-2.5">
-                          <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight font-sans">
-                            {zone.title}
-                          </h2>
-                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            {zone.items.length} {zone.items.length === 1 ? 'Guide' : 'Guides'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-neutral-500 mt-0.5">
-                          {zone.tagline}
-                        </p>
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h2 className="text-xl sm:text-2xl font-black text-neutral-900 tracking-tight font-sans">
+                          {zone.title}
+                        </h2>
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {zone.items.length} {zone.items.length === 1 ? 'Guide' : 'Guides'}
+                        </span>
                       </div>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        {zone.tagline}
+                      </p>
                     </div>
                   </div>
 

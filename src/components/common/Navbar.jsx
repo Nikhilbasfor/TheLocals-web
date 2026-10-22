@@ -26,11 +26,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [hostAuthModalOpen, setHostAuthModalOpen] = useState(false);
+  const [travellerAuthModalOpen, setTravellerAuthModalOpen] = useState(false);
 
   const handlePortalSwitch = () => {
     if (isGuide) {
-      setRole('traveller');
-      navigate('/explore');
+      setTravellerAuthModalOpen(true);
     } else {
       if (currentUser) {
         if (userProfile?.role === 'guide') {
@@ -41,7 +41,7 @@ export default function Navbar() {
             navigate('/guide/onboarding');
           }
         } else {
-          // Traveller wanting to host
+          // Traveller wanting to host: prompt modal
           setHostAuthModalOpen(true);
         }
       } else {
@@ -426,6 +426,75 @@ export default function Navbar() {
             <p className="text-[11px] text-center text-neutral-400">
               Government ID verification required after onboarding.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Explorer / Traveller Authentication Action Modal */}
+      {travellerAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-neutral-100 text-neutral-800 space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center">
+                  <Compass className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base sm:text-lg font-sans text-neutral-900">
+                    Switch to Explorer View
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    Discover and book authentic guided expeditions
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setTravellerAuthModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
+              Explore authentic local itineraries or sign in with your explorer account to book verified expeditions.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={() => {
+                  setTravellerAuthModalOpen(false);
+                  setRole('traveller');
+                  navigate('/explore');
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-traveller-forestDark hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md"
+              >
+                <Compass className="w-4 h-4" />
+                <span>Explore Expeditions Directly</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setTravellerAuthModalOpen(false);
+                  navigate('/login?role=traveller');
+                }}
+                className="w-full py-3 px-4 rounded-xl border-2 border-neutral-800 text-neutral-900 hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In as Explorer</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setTravellerAuthModalOpen(false);
+                  navigate('/signup?role=traveller');
+                }}
+                className="w-full py-2.5 px-4 rounded-xl text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Create Explorer Account</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
