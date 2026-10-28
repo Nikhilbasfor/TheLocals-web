@@ -25,6 +25,25 @@ export const storageService = {
     }
   },
 
+  // Upload guide Aadhaar / KYC identification documents
+  uploadAadhaar: async (userId, file, side = 'front') => {
+    if (!file) throw new Error("No file provided");
+    if (!userId) throw new Error("User ID is required for KYC upload");
+    const safeExt = file.name?.split('.').pop() || 'jpg';
+    const filename = `aadhaar_${side}_${Date.now()}.${safeExt}`;
+    const storageRef = ref(storage, `guides/${userId}/${filename}`);
+    
+    try {
+      const metadata = { contentType: file.type || 'image/jpeg' };
+      const snapshot = await uploadBytes(storageRef, file, metadata);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
+      return downloadUrl;
+    } catch (err) {
+      console.error(`Firebase Aadhaar (${side}) Upload Error:`, err);
+      throw err;
+    }
+  },
+
   // Upload multiple images concurrently
   uploadMultipleFiles: async (fileList, pathPrefix = 'gallery') => {
     const promises = Array.from(fileList).map(file => storageService.uploadFile(file, pathPrefix));

@@ -123,7 +123,7 @@ export default function GuideOnboardingPage() {
       }
     } catch (err) {
       console.error("KYC Upload error:", err);
-      alert("Failed to upload ID document. Please try again.");
+      alert(err.message || "Failed to upload ID document. Please try again.");
     } finally {
       if (side === 'front') setUploadingFront(false);
       else setUploadingBack(false);
