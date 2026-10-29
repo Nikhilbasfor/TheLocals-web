@@ -161,16 +161,30 @@ export function AuthProvider({ child, children }) {
       console.warn(`Recaptcha container element #${containerId} not found`);
       return null;
     }
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: 'invisible',
-      callback: () => {
-        // reCAPTCHA solved
-      },
-      'expired-callback': () => {
-        console.warn("Recaptcha expired, resetting verifier.");
-      }
-    });
-    return window.recaptchaVerifier;
+    // Clean out previous widget DOM to prevent "reCAPTCHA has already been rendered" error
+    el.innerHTML = '';
+
+    try {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: () => {
+          // reCAPTCHA solved
+        },
+        'expired-callback': () => {
+          console.warn("Recaptcha expired, resetting verifier.");
+          if (window.recaptchaVerifier) {
+            try { window.recaptchaVerifier.clear(); } catch (_) {}
+            window.recaptchaVerifier = null;
+          }
+          if (el) el.innerHTML = '';
+        }
+      });
+      return window.recaptchaVerifier;
+    } catch (e) {
+      console.warn("RecaptchaVerifier init error:", e);
+      el.innerHTML = '';
+      return null;
+    }
   };
 
   // Send real Firebase Phone SMS OTP
@@ -192,6 +206,8 @@ export function AuthProvider({ child, children }) {
         } catch (e) {}
         window.recaptchaVerifier = null;
       }
+      const el = document.getElementById(containerId);
+      if (el) el.innerHTML = '';
       throw err;
     }
   };

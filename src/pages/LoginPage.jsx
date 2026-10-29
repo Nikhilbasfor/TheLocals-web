@@ -89,7 +89,18 @@ export default function LoginPage() {
       setOtpSent(true);
     } catch (err) {
       console.error("SMS send error:", err);
-      setError(err.message || "Failed to send SMS OTP. Please check your phone number.");
+      let msg = err.message || "Failed to send SMS OTP. Please check your phone number.";
+      const errStr = String(err?.code || err?.message || '');
+      if (errStr.includes('-39') || errStr.includes('quota-exceeded')) {
+        msg = "Daily SMS quota exceeded or carrier blocked this region. Please sign in using the 'Email & Password' tab, or contact support.";
+      } else if (errStr.includes('too-many-requests')) {
+        msg = "Too many OTP requests in a short time. Please wait a few minutes or use Email & Password.";
+      } else if (errStr.includes('invalid-phone-number')) {
+        msg = "Please enter a valid phone number with correct digits.";
+      } else if (errStr.includes('reCAPTCHA')) {
+        msg = "Security reCAPTCHA reset. Please tap 'Send Verification OTP' again.";
+      }
+      setError(msg);
     } finally {
       setOtpSending(false);
     }
