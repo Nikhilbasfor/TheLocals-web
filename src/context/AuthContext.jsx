@@ -80,12 +80,26 @@ export function AuthProvider({ child, children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [selectedRole, setSelectedRole] = useState(() => localStorage.getItem('thelocals_role') || 'traveller');
+  const [activeRole, setActiveRole] = useState(() => {
+    return localStorage.getItem('thelocals_active_role') || localStorage.getItem('thelocals_role') || 'traveller';
+  });
   const [loading, setLoading] = useState(true);
 
-  // Keep selectedRole synced in localStorage
+  // Keep selectedRole and activeRole synced in localStorage
   const setRole = (role) => {
-    setSelectedRole(role);
-    localStorage.setItem('thelocals_role', role);
+    const lower = (role || 'traveller').toLowerCase();
+    setSelectedRole(lower);
+    setActiveRole(lower);
+    localStorage.setItem('thelocals_role', lower);
+    localStorage.setItem('thelocals_active_role', lower);
+  };
+
+  const switchRole = (role) => {
+    const lower = (role || 'traveller').toLowerCase();
+    setActiveRole(lower);
+    setSelectedRole(lower);
+    localStorage.setItem('thelocals_active_role', lower);
+    localStorage.setItem('thelocals_role', lower);
   };
 
   useEffect(() => {
@@ -157,7 +171,10 @@ export function AuthProvider({ child, children }) {
               createdAt: data.createdAt || Date.now(),
             };
             setUserProfile(profile);
-            if (profile.role) {
+            
+            // Sync activeRole only if user hasn't explicitly set a preference in localStorage
+            const savedMode = localStorage.getItem('thelocals_active_role');
+            if (!savedMode && profile.role) {
               setRole(profile.role);
             }
           } else {
@@ -633,7 +650,9 @@ export function AuthProvider({ child, children }) {
     currentUser,
     userProfile,
     selectedRole,
+    activeRole,
     setRole,
+    switchRole,
     loading,
     login,
     signup,
@@ -650,7 +669,7 @@ export function AuthProvider({ child, children }) {
     logout,
     deleteAccount,
     updateUserProfile,
-    isGuide: selectedRole ? selectedRole === 'guide' : userProfile?.role === 'guide',
+    isGuide: activeRole === 'guide',
   };
 
   return (

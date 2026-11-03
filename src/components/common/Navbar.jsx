@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Home,
   Compass, 
   Ticket, 
   Heart, 
@@ -16,38 +14,31 @@ import {
   Menu, 
   X,
   Repeat,
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 
 export default function Navbar() {
-  const { currentUser, userProfile, isGuide, setRole, logout } = useAuth();
+  const { currentUser, userProfile, isGuide, switchRole, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [hostAuthModalOpen, setHostAuthModalOpen] = useState(false);
-  const [travellerAuthModalOpen, setTravellerAuthModalOpen] = useState(false);
 
+  // 1-Click Seamless Portal Switch (Airbnb Style: 1 Account, Dual View)
   const handlePortalSwitch = () => {
     if (isGuide) {
-      setTravellerAuthModalOpen(true);
+      // Switch to Traveller view
+      switchRole('traveller');
+      navigate('/explore');
     } else {
-      if (currentUser) {
-        if (userProfile?.role === 'guide') {
-          setRole('guide');
-          if (userProfile?.verified) {
-            navigate('/guide/dashboard');
-          } else {
-            navigate('/guide/onboarding');
-          }
-        } else {
-          // Traveller wanting to host: prompt modal
-          setHostAuthModalOpen(true);
-        }
+      // Switch to Host view
+      switchRole('guide');
+      if (userProfile?.verified) {
+        navigate('/guide/dashboard');
       } else {
-        // Not signed in: open Host Action Modal with direct Sign In button and Register button
-        setHostAuthModalOpen(true);
+        navigate('/guide/onboarding');
       }
     }
   };
@@ -82,8 +73,8 @@ export default function Navbar() {
               THE LOCALS
               <span className={`text-[10px] font-bold tracking-widest px-2 py-0.5 rounded-full uppercase ${
                 isGuide 
-                  ? 'bg-guide-primary text-white' 
-                  : 'bg-traveller-mint/15 text-traveller-forestDark border border-traveller-mint/30'
+                  ? 'bg-guide-primary text-white shadow-xs' 
+                  : 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs'
               }`}>
                 {isGuide ? 'HOST PORTAL' : 'TRAVELLER'}
               </span>
@@ -94,6 +85,7 @@ export default function Navbar() {
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-6">
           {!isGuide ? (
+            /* TRAVELLER NAVBAR LINKS */
             <>
               <Link
                 to="/explore"
@@ -101,7 +93,7 @@ export default function Navbar() {
                   isActive('/explore') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Compass className="w-4 h-4 text-traveller-mint" />
+                <Compass className="w-4 h-4 text-emerald-600" />
                 Explore
               </Link>
               <Link
@@ -119,8 +111,8 @@ export default function Navbar() {
                   isActive('/bookings') ? 'text-traveller-forestDark font-extrabold' : 'text-neutral-textMuted hover:text-neutral-textMain'
                 }`}
               >
-                <Ticket className="w-4 h-4 text-traveller-mint" />
-                Bookings
+                <Ticket className="w-4 h-4 text-emerald-600" />
+                My Bookings
               </Link>
               <Link
                 to="/wishlist"
@@ -133,6 +125,7 @@ export default function Navbar() {
               </Link>
             </>
           ) : (
+            /* GUIDE / HOST NAVBAR LINKS */
             <>
               <Link
                 to="/guide/dashboard"
@@ -163,7 +156,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to="/guide/create-experience"
-                className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-guide-primary text-white hover:bg-guide-headerDark transition-colors shadow-sm"
+                className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg bg-guide-primary text-white hover:bg-guide-headerDark transition-colors shadow-sm"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 New Itinerary
@@ -177,14 +170,27 @@ export default function Navbar() {
           {/* Notification Bell */}
           <NotificationBell />
 
-          {/* Switch Role Button */}
+          {/* 1-Click Role Switch Pill Button */}
           <button
             onClick={handlePortalSwitch}
-            className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-neutral-300 hover:border-neutral-400 bg-neutral-50 text-neutral-700 hover:bg-neutral-100 transition-colors"
-            title={isGuide ? "Switch to Explorer/Traveller view" : "Switch to Guide/Host portal"}
+            className={`hidden sm:flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all shadow-xs ${
+              isGuide
+                ? 'border-neutral-300 hover:border-neutral-400 bg-neutral-100 text-neutral-800 hover:bg-neutral-200'
+                : 'border-emerald-500/40 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
+            }`}
+            title={isGuide ? "Switch to Explorer / Traveller View" : "Switch to Guide / Host Portal"}
           >
-            <Repeat className="w-3.5 h-3.5 text-neutral-500" />
-            <span>{isGuide ? "Traveller View" : "Host a Trip"}</span>
+            {isGuide ? (
+              <>
+                <Compass className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Traveller View</span>
+              </>
+            ) : (
+              <>
+                <LayoutDashboard className="w-3.5 h-3.5 text-emerald-700" />
+                <span>{userProfile?.role === 'guide' || userProfile?.onboardingComplete ? 'Host Portal' : 'Host a Trip'}</span>
+              </>
+            )}
           </button>
 
           {/* User Account / Profile */}
@@ -192,12 +198,12 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 p-1 pl-2 rounded-full border border-neutral-200 hover:border-neutral-300 transition-all bg-white shadow-xs"
+                className="flex items-center gap-2 p-1 pl-2.5 rounded-full border border-neutral-200 hover:border-neutral-300 transition-all bg-white shadow-xs"
               >
                 <span className="text-xs font-semibold text-neutral-700 hidden lg:inline max-w-[100px] truncate">
-                  {userProfile?.name || 'Explorer'}
+                  {userProfile?.name || 'My Account'}
                 </span>
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-traveller-lightMint flex items-center justify-center border border-traveller-mint/40 text-traveller-forestDark font-bold text-xs">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center border border-emerald-300 text-emerald-900 font-bold text-xs">
                   {userProfile?.profilePicUrl ? (
                     <img src={userProfile.profilePicUrl} alt={userProfile.name} className="w-full h-full object-cover" />
                   ) : (
@@ -209,13 +215,13 @@ export default function Navbar() {
               {/* User Dropdown Menu */}
               {userDropdownOpen && (
                 <div 
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-neutral-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-neutral-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
                   onClick={() => setUserDropdownOpen(false)}
                 >
                   <div className="px-4 py-2 border-b border-neutral-100">
-                    <p className="text-xs text-neutral-400 font-medium">Signed in as</p>
-                    <p className="text-sm font-bold text-neutral-800 truncate">{userProfile?.name || currentUser.email}</p>
-                    <p className="text-xs text-neutral-500 truncate">{currentUser.email}</p>
+                    <p className="text-[11px] text-neutral-400 font-semibold uppercase tracking-wider">Signed in as</p>
+                    <p className="text-sm font-bold text-neutral-800 truncate">{userProfile?.name || currentUser.displayName || 'User'}</p>
+                    <p className="text-xs text-neutral-500 truncate">{userProfile?.email || currentUser.email || userProfile?.phone}</p>
                   </div>
 
                   <Link 
@@ -223,25 +229,26 @@ export default function Navbar() {
                     className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
                   >
                     <User className="w-4 h-4 text-neutral-400" />
-                    My Profile
+                    <span>My Profile</span>
                   </Link>
 
+                  {/* Portal Switch Option in Dropdown */}
                   <button
                     onClick={handlePortalSwitch}
-                    className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors sm:hidden"
+                    className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
                   >
                     <Repeat className="w-4 h-4 text-neutral-400" />
-                    {isGuide ? "Switch to Traveller View" : "Switch to Host View"}
+                    <span>{isGuide ? "Switch to Traveller View" : "Switch to Host Portal"}</span>
                   </button>
 
                   <div className="border-t border-neutral-100 my-1"></div>
 
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-sm text-brand-red hover:bg-red-50 transition-colors"
+                    className="w-full text-left flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    Sign Out
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}
@@ -256,7 +263,7 @@ export default function Navbar() {
               </Link>
               <Link
                 to={`/signup?role=${isGuide ? 'guide' : 'traveller'}`}
-                className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg bg-traveller-forestDark text-white hover:bg-black transition-colors shadow-sm"
+                className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg bg-emerald-900 text-white hover:bg-black transition-colors shadow-sm"
               >
                 Join
               </Link>
@@ -283,7 +290,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                <Compass className="w-4 h-4 text-traveller-mint" />
+                <Compass className="w-4 h-4 text-emerald-600" />
                 Explore Expeditions
               </Link>
               <Link
@@ -299,7 +306,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
               >
-                <Ticket className="w-4 h-4 text-traveller-mint" />
+                <Ticket className="w-4 h-4 text-emerald-600" />
                 My Bookings
               </Link>
               <Link
@@ -354,10 +361,10 @@ export default function Navbar() {
                 setMobileMenuOpen(false);
                 handlePortalSwitch();
               }}
-              className="flex items-center gap-2 text-xs font-semibold text-neutral-700 py-2"
+              className="flex items-center gap-2 text-xs font-bold text-neutral-800 py-2"
             >
               <Repeat className="w-4 h-4 text-neutral-500" />
-              {isGuide ? "Switch to Traveller View" : "Host a Trip"}
+              <span>{isGuide ? "Switch to Traveller View" : (userProfile?.role === 'guide' || userProfile?.onboardingComplete ? "Switch to Host Portal" : "Host a Trip")}</span>
             </button>
             <Link
               to="/"
@@ -368,138 +375,6 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-      )}
-
-      {/* Host Authentication Action Modal mounted to document.body */}
-      {hostAuthModalOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-neutral-100 text-neutral-800 space-y-5 my-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base sm:text-lg font-sans text-neutral-900">
-                    Host with THE LOCALS
-                  </h3>
-                  <p className="text-xs text-neutral-500">
-                    Share your homeland & lead authentic expeditions
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setHostAuthModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
-              Already registered as a local host or expedition leader? Sign in directly to manage your dashboard and itineraries. If you're new, follow the simple registration steps to get verified.
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <button
-                onClick={() => {
-                  setHostAuthModalOpen(false);
-                  navigate('/login?role=guide');
-                }}
-                className="w-full py-3 px-4 rounded-xl bg-guide-primary hover:bg-guide-headerDark text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"
-              >
-                <User className="w-4 h-4" />
-                <span>Sign In as Host</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setHostAuthModalOpen(false);
-                  navigate('/signup?role=guide');
-                }}
-                className="w-full py-3 px-4 rounded-xl border-2 border-emerald-600 text-emerald-800 hover:bg-emerald-50 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4 text-emerald-600" />
-                <span>Register as New Host</span>
-              </button>
-            </div>
-
-            <p className="text-[11px] text-center text-neutral-400">
-              Government ID verification required after onboarding.
-            </p>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Explorer / Traveller Authentication Action Modal mounted to document.body */}
-      {travellerAuthModalOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-neutral-100 text-neutral-800 space-y-5 my-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base sm:text-lg font-sans text-neutral-900">
-                    Switch to Explorer View
-                  </h3>
-                  <p className="text-xs text-neutral-500">
-                    Discover and book authentic guided expeditions
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setTravellerAuthModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
-              Explore authentic local itineraries or sign in with your explorer account to book verified expeditions.
-            </p>
-
-            <div className="space-y-3 pt-2">
-              <button
-                onClick={() => {
-                  setTravellerAuthModalOpen(false);
-                  setRole('traveller');
-                  navigate('/explore');
-                }}
-                className="w-full py-3 px-4 rounded-xl bg-traveller-forestDark hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md"
-              >
-                <Compass className="w-4 h-4" />
-                <span>Explore Expeditions Directly</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setTravellerAuthModalOpen(false);
-                  navigate('/login?role=traveller');
-                }}
-                className="w-full py-3 px-4 rounded-xl border-2 border-neutral-800 text-neutral-900 hover:bg-neutral-100 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <User className="w-4 h-4" />
-                <span>Sign In as Explorer</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setTravellerAuthModalOpen(false);
-                  navigate('/signup?role=traveller');
-                }}
-                className="w-full py-2.5 px-4 rounded-xl text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>Create Explorer Account</span>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
       )}
     </header>
   );
