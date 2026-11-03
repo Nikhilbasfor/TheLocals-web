@@ -259,7 +259,19 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { profile } = await login(email, password, activeRole);
+      const { user, profile } = await login(email, password, activeRole);
+      
+      // If legacy account has NO phone number attached, prompt to attach mobile number
+      if (!profile?.phone || profile.phone.trim() === '') {
+        setCompletionUid(user.uid);
+        setComplName(profile?.name || user.displayName || '');
+        setComplEmail(user.email || email);
+        setComplPhone('');
+        setShowCompletionModal(true);
+        setIsLoading(false);
+        return;
+      }
+
       handleNavigationAfterLogin(profile);
     } catch (err) {
       console.error("Login failed:", err);

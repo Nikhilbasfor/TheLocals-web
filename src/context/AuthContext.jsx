@@ -515,28 +515,69 @@ export function AuthProvider({ child, children }) {
       throw new Error("A valid mobile number is required.");
     }
 
-    // 1. Ensure email is unique across all user profiles
+    // 1. Check if an existing profile exists with this email (Support for Legacy Accounts)
     const existingEmailDoc = await findExistingUserByEmail(cleanEmail);
+    let legacyMergedProfile = null;
+
     if (existingEmailDoc && existingEmailDoc.id !== uid) {
-      throw new Error(`The email address '${cleanEmail}' is already registered with another account.`);
+      const legacyData = existingEmailDoc.data();
+      const legacyPhone = (legacyData.phone || '').trim();
+
+      // If the legacy account already had a DIFFERENT phone number
+      if (legacyPhone && legacyPhone.replace(/\D/g, '') !== cleanPhone.replace(/\D/g, '')) {
+        throw new Error(`The email '${cleanEmail}' is already linked to another mobile number (${legacyPhone}). Please sign in using that number.`);
+      }
+
+      // Legacy account had NO phone attached (or same phone): MERGE seamlessly!
+      legacyMergedProfile = {
+        ...legacyData,
+        phone: cleanPhone,
+        uid: uid,
+        linkedUid: existingEmailDoc.id,
+        name: legacyData.name || cleanName,
+        fullName: legacyData.fullName || cleanName,
+        bio: legacyData.bio || bio || '',
+        role: legacyData.role || (role || 'traveller').toLowerCase(),
+        country: legacyData.country || country || 'India',
+        state: legacyData.state || state || 'Uttarakhand',
+        city: legacyData.city || city || '',
+        experienceYears: legacyData.experienceYears || Number(experienceYears) || 0,
+        verified: legacyData.verified === true || legacyData.isVerified === true,
+        isVerified: legacyData.verified === true || legacyData.isVerified === true,
+        updatedAt: Date.now(),
+      };
+
+      // Attach the verified phone number to the legacy document in Firestore as well
+      try {
+        await updateDoc(doc(db, 'users', existingEmailDoc.id), {
+          phone: cleanPhone,
+          linkedUid: uid,
+          updatedAt: Date.now()
+        });
+      } catch (err) {
+        console.warn("Could not update legacy doc with phone:", err);
+      }
     }
 
-    // 2. Ensure phone is unique across all user profiles
+    // 2. Ensure phone is unique across other accounts
     const existingPhoneDoc = await findExistingUserByPhone(cleanPhone);
-    if (existingPhoneDoc && existingPhoneDoc.id !== uid) {
+    if (existingPhoneDoc && existingPhoneDoc.id !== uid && (!existingEmailDoc || existingPhoneDoc.id !== existingEmailDoc.id)) {
       throw new Error(`The mobile number '${cleanPhone}' is already registered with another account.`);
     }
 
     if (currentUser && currentUser.uid === uid) {
       try {
-        await updateProfile(currentUser, { displayName: cleanName });
+        await updateProfile(currentUser, { displayName: legacyMergedProfile?.name || cleanName });
       } catch (e) {
         console.warn("Could not update auth displayName:", e);
       }
     }
 
-    const finalRole = (role || 'traveller').toLowerCase();
-    const newProfile = {
+    const finalRole = (legacyMergedProfile?.role || role || 'traveller').toLowerCase();
+    const finalProfile = legacyMergedProfile ? {
+      ...legacyMergedProfile,
+      profilePicUrl: legacyMergedProfile.profilePicUrl || profilePicUrl || currentUser?.photoURL || '',
+    } : {
       uid: uid,
       name: cleanName,
       fullName: cleanName,
@@ -562,10 +603,25 @@ export function AuthProvider({ child, children }) {
       updatedAt: Date.now(),
     };
 
-    await setDoc(doc(db, 'users', uid), newProfile, { merge: true });
+    await setDoc(doc(db, 'users', uid), finalProfile, { merge: true });
     setRole(finalRole);
-    setUserProfile(newProfile);
-    return newProfile;
+    setUserProfile(finalProfile);
+    return finalProfile;
+  };
+
+  // Attach Phone to logged in account (for legacy email accounts)
+  const attachPhoneToAccount = async (phoneNumber) => {
+    if (!currentUser) throw new Error("User not authenticated.");
+    const cleanPhone = (phoneNumber || '').trim();
+    if (!cleanPhone || cleanPhone.replace(/\D/g, '').length < 6) {
+      throw new Error("Please enter a valid mobile number.");
+    }
+    const existing = await findExistingUserByPhone(cleanPhone);
+    if (existing && existing.id !== currentUser.uid && existing.data()?.email !== currentUser.email) {
+      throw new Error(`The mobile number '${cleanPhone}' is already associated with another account.`);
+    }
+    await updateUserProfile({ phone: cleanPhone });
+    return cleanPhone;
   };
 
   // 8. Confirm Phone Signup with real OTP
@@ -658,6 +714,7 @@ export function AuthProvider({ child, children }) {
     signup,
     loginWithGoogle,
     createOrCompleteUserProfile,
+    attachPhoneToAccount,
     findExistingUserByPhone,
     findExistingUserByEmail,
     initRecaptcha,
