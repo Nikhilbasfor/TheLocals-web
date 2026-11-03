@@ -253,126 +253,58 @@ export default function ExploreHomePage() {
 
       <main className="min-h-screen pb-24 md:pb-16">
         
-        {/* ================= MOBILE COMPACT FOREST GREEN HEADER ================= */}
-        {/* Directly reproduces Reference Image 3 from the Flutter reference app */}
-        <div className="sm:hidden bg-[#0B3B2C] text-white px-3.5 pt-3 pb-3.5 shadow-md">
-          {/* Integrated Search Bar with Region Pill & Filter Toggle */}
-          <div className="relative flex items-center bg-white rounded-xl shadow-md p-1 border border-emerald-900/20">
-            <Search className="w-4 h-4 text-neutral-400 ml-2.5 flex-shrink-0" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search destinations, guides or..."
-              className="w-full px-2 py-1 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none"
-            />
-            {searchTerm && (
-              <button 
-                onClick={() => setSearchTerm('')}
-                className="p-1 text-neutral-400 hover:text-neutral-600 mr-1"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            
-            {/* Region dropdown pill */}
-            <button
-              onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-[11px] font-bold flex-shrink-0 mr-1"
-            >
-              <MapPin className="w-3 h-3 text-emerald-700" />
-              <span className="max-w-[65px] truncate">{selectedState === 'All' ? 'Region' : selectedState}</span>
-              <ChevronDown className="w-3 h-3 text-emerald-700" />
-            </button>
-
-            {/* Sliders filter button */}
-            <button
-              onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
-              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
-                filterDrawerOpen ? 'bg-emerald-600 text-white' : 'text-neutral-600 hover:text-neutral-900'
-              }`}
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Horizontal Category Pills within Green Header */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5">
-            {CATEGORIES.map((cat) => {
-              const isActive = selectedCategory === cat;
-              return (
-                <button
-                  key={`mobile-${cat}`}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0 transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-[#D1FAE5] text-[#065F46] shadow-xs'
-                      : 'bg-white/10 hover:bg-white/20 text-white/90 border border-white/15'
-                  }`}
-                >
-                  {cat === 'All' && <LayoutGrid className="w-3.5 h-3.5" />}
-                  {cat === 'Trek' && <Footprints className="w-3.5 h-3.5" />}
-                  {cat === 'Cultural' && <Sparkles className="w-3.5 h-3.5" />}
-                  {cat === 'Heritage' && <ShieldCheck className="w-3.5 h-3.5" />}
-                  <span>{cat}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ================= DESKTOP HERO SECTION (hidden sm:block) ================= */}
+        {/* ================= SCENIC HERO SECTION (RESPONSIVE LAPTOP & MOBILE) ================= */}
         <div 
-          className="hidden sm:block relative text-white overflow-hidden py-16 sm:py-24 px-4 sm:px-6 lg:px-8 shadow-lg bg-cover bg-center"
+          className="relative text-white overflow-hidden py-12 sm:py-24 px-4 sm:px-6 lg:px-8 shadow-lg bg-cover bg-center"
           style={{ 
             backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=90')" 
           }}
         >
           {/* Subtle natural dark gradient for text clarity - no green tint */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/65 pointer-events-none" />
 
-          <div className="relative max-w-4xl mx-auto text-center space-y-4">
-            <span className="text-xs font-extrabold tracking-widest text-emerald-300 uppercase px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 inline-block">
+          <div className="relative max-w-4xl mx-auto text-center space-y-3 sm:space-y-4">
+            <span className="text-[10px] sm:text-xs font-extrabold tracking-widest text-emerald-300 uppercase px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 inline-block">
               DISCOVER HIDDEN EXPERIENCES
             </span>
 
-            <h1 className="text-3xl sm:text-5xl font-black font-sans tracking-tight">
-              What's your next story?
+            <h1 className="text-2xl sm:text-5xl font-black font-sans tracking-tight">
+              What&apos;s your next story?
             </h1>
 
-            <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto font-normal leading-relaxed">
+            <p className="text-xs sm:text-base text-white/85 max-w-2xl mx-auto font-normal leading-relaxed px-2">
               Book curated, immersive experiences and intimate journeys led and guided by THE LOCALS.
             </p>
 
             {/* Floating Search Bar */}
-            <div className="pt-4 max-w-2xl mx-auto">
-              <div className="relative flex items-center bg-white rounded-2xl shadow-2xl p-2 border border-neutral-200">
-                <Search className="w-5 h-5 text-neutral-400 ml-3 flex-shrink-0" />
+            <div className="pt-2 sm:pt-4 max-w-2xl mx-auto">
+              <div className="relative flex items-center bg-white rounded-2xl shadow-2xl p-1.5 sm:p-2 border border-neutral-200">
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 ml-2.5 sm:ml-3 flex-shrink-0" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by experiences or location"
-                  className="w-full px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none"
+                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-neutral-800 placeholder-neutral-400 focus:outline-none"
                 />
                 {searchTerm && (
                   <button 
                     onClick={() => setSearchTerm('')}
-                    className="p-1 text-neutral-400 hover:text-neutral-600 mr-2"
+                    className="p-1 text-neutral-400 hover:text-neutral-600 mr-1 sm:mr-2"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 )}
                 <button
                   onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-colors flex-shrink-0 ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-colors flex-shrink-0 ${
                     filterDrawerOpen 
                       ? 'bg-traveller-mint text-white' 
                       : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Filters</span>
+                  <span className="text-xs">Filters</span>
                 </button>
               </div>
             </div>
@@ -471,11 +403,11 @@ export default function ExploreHomePage() {
           </div>
         )}
 
-        {/* Quick Destination Chips (Desktop) */}
-        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
-            <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider flex-shrink-0 mr-1">
-              Popular States:
+        {/* Popular States Horizontal Scroll (All Devices) */}
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 mt-4 sm:mt-6">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+            <span className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex-shrink-0 mr-1">
+              POPULAR STATES:
             </span>
             {POPULAR_STATES.slice(0, 10).map((dest) => (
               <button
@@ -493,14 +425,14 @@ export default function ExploreHomePage() {
           </div>
         </div>
 
-        {/* Category Pill Tabs (Desktop) */}
-        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
+        {/* Category Pill Tabs (All Devices) */}
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 mt-2.5 sm:mt-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`text-xs font-bold px-4 py-2 rounded-xl flex-shrink-0 transition-all ${
+                className={`text-xs font-bold px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl flex-shrink-0 transition-all ${
                   selectedCategory === cat
                     ? 'bg-traveller-mint text-white shadow-xs'
                     : 'bg-white/80 hover:bg-white text-neutral-600 border border-neutral-200/80'
@@ -513,7 +445,7 @@ export default function ExploreHomePage() {
         </div>
 
         {/* ZONAL SECTIONS OF INDIA FOR EXPEDITIONS */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4 sm:mt-10">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 mt-5 sm:mt-8">
           
           {loading ? (
             <div className="py-24 text-center space-y-3">

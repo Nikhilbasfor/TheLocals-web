@@ -26,7 +26,7 @@ export default function TravellerBookingsPage() {
   const { currentUser } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     if (!currentUser) {
@@ -64,6 +64,7 @@ export default function TravellerBookingsPage() {
   const cancelledCount = bookings.filter((b) => b.status === 'cancelled').length;
 
   const filteredBookings = bookings.filter((b) => {
+    if (activeTab === 'all') return true;
     if (activeTab === 'pending') return b.status === 'pending';
     if (activeTab === 'confirmed') return b.status === 'confirmed';
     if (activeTab === 'completed') return b.status === 'completed';
@@ -108,21 +109,14 @@ export default function TravellerBookingsPage() {
     <TravelPatternBackground>
       <Navbar />
 
-      {/* Top Header Banner on Mobile (Matching Reference Image 1) */}
-      <div className="sm:hidden bg-[#0B3B2C] text-white py-3 px-4 text-center shadow-xs">
-        <h1 className="text-sm font-bold tracking-widest uppercase font-sans">
-          My Bookings
-        </h1>
-      </div>
-
-      <main className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 min-h-screen pb-24 md:pb-16 space-y-4 sm:space-y-6">
+      <main className="max-w-4xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 min-h-screen pb-24 md:pb-16 space-y-4 sm:space-y-6">
         
-        {/* Desktop Header */}
-        <div className="hidden sm:flex sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200">
+        {/* Responsive Header (Laptop & Phone) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-neutral-200">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black font-sans text-neutral-900 tracking-tight flex items-center gap-2.5">
-              <Ticket className="w-7 h-7 text-emerald-700" />
-              My Bookings
+            <h1 className="text-xl sm:text-3xl font-black font-sans text-neutral-900 tracking-tight flex items-center gap-2 sm:gap-2.5">
+              <Ticket className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-700 flex-shrink-0" />
+              <span>My Bookings</span>
             </h1>
             <p className="text-xs text-neutral-500 mt-1">
               Track upcoming trips, verified host coordination & booking receipts
@@ -131,74 +125,28 @@ export default function TravellerBookingsPage() {
 
           <Link
             to="/explore"
-            className="text-xs font-bold px-4 py-2 rounded-xl bg-traveller-forestDark text-white hover:bg-black transition-colors self-start sm:self-auto flex items-center gap-1.5"
+            className="text-xs font-bold px-3.5 py-2 rounded-xl bg-traveller-forestDark text-white hover:bg-black transition-colors self-start sm:self-auto flex items-center gap-1.5"
           >
             <Compass className="w-3.5 h-3.5" />
             <span>Discover More Trips</span>
           </Link>
         </div>
 
-        {/* TRAVELLER DASHBOARD Metric Card (Matching Reference Image 1) */}
-        <div className="bg-[#0B3B2C] text-white p-4 sm:p-5 rounded-2xl shadow-md space-y-3">
-          <div className="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase text-emerald-300">
-            TRAVELLER DASHBOARD
-          </div>
-          <div className="grid grid-cols-3 divide-x divide-white/15 text-center">
-            {/* Pending */}
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('pending')}
-              className="px-2 hover:opacity-90 transition-opacity"
-            >
-              <div className="flex items-center justify-center gap-1.5 text-base sm:text-xl font-black font-sans">
-                <Clock className="w-4 h-4 text-amber-400" />
-                <span>{pendingCount}</span>
-              </div>
-              <div className="text-[11px] text-emerald-200 mt-1 font-medium">Pending</div>
-            </button>
-
-            {/* Upcoming */}
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('confirmed')}
-              className="px-2 hover:opacity-90 transition-opacity"
-            >
-              <div className="flex items-center justify-center gap-1.5 text-base sm:text-xl font-black font-sans">
-                <Plane className="w-4 h-4 text-sky-400" />
-                <span>{upcomingCount}</span>
-              </div>
-              <div className="text-[11px] text-emerald-200 mt-1 font-medium">Upcoming</div>
-            </button>
-
-            {/* Completed */}
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('completed')}
-              className="px-2 hover:opacity-90 transition-opacity"
-            >
-              <div className="flex items-center justify-center gap-1.5 text-base sm:text-xl font-black font-sans">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span>{completedCount}</span>
-              </div>
-              <div className="text-[11px] text-emerald-200 mt-1 font-medium">Completed</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Filter Status Pills (Matching Reference Image 1) */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+        {/* Filter Status Pills (Clean laptop aesthetic with proper mobile spacing) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
           {[
-            { id: 'pending', label: `Pending (${pendingCount})` },
+            { id: 'all', label: `All (${bookings.length})` },
             { id: 'confirmed', label: `Upcoming (${upcomingCount})` },
+            { id: 'pending', label: `Pending (${pendingCount})` },
             { id: 'completed', label: `Completed (${completedCount})` },
             { id: 'cancelled', label: `Cancelled (${cancelledCount})` },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap transition-all ${
+              className={`text-xs font-bold px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl whitespace-nowrap transition-all ${
                 activeTab === tab.id
-                  ? 'bg-[#0B3B2C] text-white shadow-xs'
+                  ? 'bg-traveller-forestDark text-white shadow-xs'
                   : 'bg-white border border-neutral-200 text-neutral-600 hover:border-neutral-300'
               }`}
             >
@@ -223,18 +171,19 @@ export default function TravellerBookingsPage() {
             </Link>
           </div>
         ) : filteredBookings.length === 0 ? (
-          /* Empty State Matching Reference Image 1 */
-          <div className="py-20 text-center max-w-sm mx-auto space-y-3">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-neutral-100 flex items-center justify-center text-neutral-400">
-              <Ticket className="w-8 h-8" />
+          <div className="py-16 text-center bg-white rounded-3xl border border-neutral-200 p-8 max-w-md mx-auto space-y-3 my-4 sm:my-8 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto text-neutral-400">
+              <Ticket className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-base text-emerald-950 font-sans">
-              No {activeTab === 'pending' ? 'Pending' : activeTab === 'confirmed' ? 'Upcoming' : activeTab === 'completed' ? 'Completed' : 'Cancelled'} Bookings
+            <h3 className="font-bold text-base text-neutral-900 font-sans">
+              No {activeTab === 'all' ? '' : activeTab === 'confirmed' ? 'Upcoming ' : `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} `}Bookings Found
             </h3>
-            <p className="text-xs text-neutral-500">
-              Explore experiences and book your journey!
+            <p className="text-xs text-neutral-500 max-w-xs mx-auto">
+              {activeTab === 'all' 
+                ? "You haven't reserved any expeditions yet. Explore journeys and start planning!" 
+                : `No ${activeTab} reservations found in your account.`}
             </p>
-            <Link to="/explore" className="inline-block mt-2 px-5 py-2.5 rounded-xl bg-[#0B3B2C] text-white text-xs font-bold hover:bg-black transition-colors">
+            <Link to="/explore" className="inline-block mt-2 px-5 py-2.5 rounded-xl bg-traveller-forestDark text-white text-xs font-bold hover:bg-black transition-colors">
               Explore Trips
             </Link>
           </div>
