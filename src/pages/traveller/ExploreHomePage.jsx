@@ -21,7 +21,8 @@ import {
   HeartHandshake,
   Footprints,
   Layers,
-  ChevronDown
+  ChevronDown,
+  LayoutGrid
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -252,9 +253,77 @@ export default function ExploreHomePage() {
 
       <main className="min-h-screen pb-24 md:pb-16">
         
-        {/* Hero Section with Crystal Clear Mountain Scenery - No green filter */}
+        {/* ================= MOBILE COMPACT FOREST GREEN HEADER ================= */}
+        {/* Directly reproduces Reference Image 3 from the Flutter reference app */}
+        <div className="sm:hidden bg-[#0B3B2C] text-white px-3.5 pt-3 pb-3.5 shadow-md">
+          {/* Integrated Search Bar with Region Pill & Filter Toggle */}
+          <div className="relative flex items-center bg-white rounded-xl shadow-md p-1 border border-emerald-900/20">
+            <Search className="w-4 h-4 text-neutral-400 ml-2.5 flex-shrink-0" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search destinations, guides or..."
+              className="w-full px-2 py-1 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="p-1 text-neutral-400 hover:text-neutral-600 mr-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            
+            {/* Region dropdown pill */}
+            <button
+              onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-[11px] font-bold flex-shrink-0 mr-1"
+            >
+              <MapPin className="w-3 h-3 text-emerald-700" />
+              <span className="max-w-[65px] truncate">{selectedState === 'All' ? 'Region' : selectedState}</span>
+              <ChevronDown className="w-3 h-3 text-emerald-700" />
+            </button>
+
+            {/* Sliders filter button */}
+            <button
+              onClick={() => setFilterDrawerOpen(!filterDrawerOpen)}
+              className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
+                filterDrawerOpen ? 'bg-emerald-600 text-white' : 'text-neutral-600 hover:text-neutral-900'
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Horizontal Category Pills within Green Header */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5">
+            {CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat;
+              return (
+                <button
+                  key={`mobile-${cat}`}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0 transition-all flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-[#D1FAE5] text-[#065F46] shadow-xs'
+                      : 'bg-white/10 hover:bg-white/20 text-white/90 border border-white/15'
+                  }`}
+                >
+                  {cat === 'All' && <LayoutGrid className="w-3.5 h-3.5" />}
+                  {cat === 'Trek' && <Footprints className="w-3.5 h-3.5" />}
+                  {cat === 'Cultural' && <Sparkles className="w-3.5 h-3.5" />}
+                  {cat === 'Heritage' && <ShieldCheck className="w-3.5 h-3.5" />}
+                  <span>{cat}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ================= DESKTOP HERO SECTION (hidden sm:block) ================= */}
         <div 
-          className="relative text-white overflow-hidden py-16 sm:py-24 px-4 sm:px-6 lg:px-8 shadow-lg bg-cover bg-center"
+          className="hidden sm:block relative text-white overflow-hidden py-16 sm:py-24 px-4 sm:px-6 lg:px-8 shadow-lg bg-cover bg-center"
           style={{ 
             backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=90')" 
           }}
@@ -402,8 +471,8 @@ export default function ExploreHomePage() {
           </div>
         )}
 
-        {/* Quick Destination Chips */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {/* Quick Destination Chips (Desktop) */}
+        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
             <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider flex-shrink-0 mr-1">
               Popular States:
@@ -424,8 +493,8 @@ export default function ExploreHomePage() {
           </div>
         </div>
 
-        {/* Category Pill Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
+        {/* Category Pill Tabs (Desktop) */}
+        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
             {CATEGORIES.map((cat) => (
               <button
@@ -444,7 +513,7 @@ export default function ExploreHomePage() {
         </div>
 
         {/* ZONAL SECTIONS OF INDIA FOR EXPEDITIONS */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-4 sm:mt-10">
           
           {loading ? (
             <div className="py-24 text-center space-y-3">
@@ -506,7 +575,7 @@ export default function ExploreHomePage() {
                         New local hosts in {zone.title} are onboarding soon. Check back shortly!
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                         {zone.items.map((exp) => (
                           <ExperienceCard
                             key={exp.id}

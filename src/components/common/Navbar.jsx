@@ -60,18 +60,18 @@ export default function Navbar() {
     : "/explore";
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-cardBorder">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-cardBorder">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         
         {/* Brand / Logo */}
-        <Link to={homePath} className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-full overflow-hidden p-1 bg-white shadow-sm border border-neutral-200 group-hover:scale-105 transition-transform">
+        <Link to={homePath} className="flex items-center gap-2 sm:gap-3 group">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden p-0.5 bg-white shadow-xs border border-neutral-200 group-hover:scale-105 transition-transform flex-shrink-0">
             <img src="/app_logo.png" alt="The Locals" className="w-full h-full object-contain" />
           </div>
           <div>
-            <span className="font-extrabold text-lg sm:text-xl tracking-wider text-neutral-textMain font-sans flex items-center gap-2">
+            <span className="font-extrabold text-base sm:text-xl tracking-wider text-neutral-textMain font-sans flex items-center gap-2">
               THE LOCALS
-              <span className={`text-[10px] font-bold tracking-widest px-2 py-0.5 rounded-full uppercase ${
+              <span className={`hidden sm:inline-block text-[10px] font-bold tracking-widest px-2 py-0.5 rounded-full uppercase ${
                 isGuide 
                   ? 'bg-guide-primary text-white shadow-xs' 
                   : 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs'
@@ -166,7 +166,18 @@ export default function Navbar() {
         </nav>
 
         {/* Action Controls & Auth Dropdown */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quick Wishlist on Mobile for Travellers */}
+          {!isGuide && (
+            <Link
+              to="/wishlist"
+              className="md:hidden p-1.5 text-neutral-600 hover:text-red-500 transition-colors"
+              title="Saved Wishlist"
+            >
+              <Heart className="w-5 h-5 text-neutral-700 hover:text-red-500" />
+            </Link>
+          )}
+
           {/* Notification Bell */}
           <NotificationBell />
 
@@ -198,7 +209,7 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 p-1 pl-2.5 rounded-full border border-neutral-200 hover:border-neutral-300 transition-all bg-white shadow-xs"
+                className="flex items-center gap-1.5 sm:gap-2 p-0.5 sm:p-1 sm:pl-2.5 rounded-full border border-neutral-200 hover:border-neutral-300 transition-all bg-white shadow-xs"
               >
                 <span className="text-xs font-semibold text-neutral-700 hidden lg:inline max-w-[100px] truncate">
                   {userProfile?.name || 'My Account'}
@@ -254,16 +265,16 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Link
                 to={`/login?role=${isGuide ? 'guide' : 'traveller'}`}
-                className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg text-neutral-700 hover:text-neutral-900 transition-colors"
+                className="text-xs sm:text-sm font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-neutral-700 hover:text-neutral-900 transition-colors"
               >
                 Log In
               </Link>
               <Link
                 to={`/signup?role=${isGuide ? 'guide' : 'traveller'}`}
-                className="text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg bg-emerald-900 text-white hover:bg-black transition-colors shadow-sm"
+                className="hidden sm:inline-flex text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg bg-emerald-900 text-white hover:bg-black transition-colors shadow-sm"
               >
                 Join
               </Link>
@@ -273,7 +284,7 @@ export default function Navbar() {
           {/* Mobile hamburger menu toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+            className="md:hidden p-1.5 rounded-lg text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

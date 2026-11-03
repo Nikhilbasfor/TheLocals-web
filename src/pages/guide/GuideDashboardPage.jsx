@@ -163,21 +163,21 @@ export default function GuideDashboardPage() {
         </div>
 
         {/* Stats Grid (matching guide_dashboard_tab.dart _buildStatCard) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           
           {/* Bookings Revenue */}
           <Link
             to="/guide/bookings"
-            className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-emerald-400 hover:shadow-md transition-all flex flex-col justify-between group"
+            className="bg-white p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-emerald-400 hover:shadow-md transition-all flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-neutral-500">Bookings Revenue</span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <IndianRupee className="w-4 h-4" />
+              <span className="text-[11px] sm:text-xs font-semibold text-neutral-500">Bookings Revenue</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <IndianRupee className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="mt-4">
-              <span className="text-2xl font-black text-emerald-600 font-sans">
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xl sm:text-2xl font-black text-emerald-600 font-sans">
                 ₹{totalRevenue.toLocaleString('en-IN')}
               </span>
             </div>
@@ -186,18 +186,18 @@ export default function GuideDashboardPage() {
           {/* New Requests */}
           <Link
             to="/guide/bookings"
-            className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-red-400 hover:shadow-md transition-all flex flex-col justify-between group"
+            className="bg-white p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-red-400 hover:shadow-md transition-all flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-neutral-500">New Requests</span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform ${
+              <span className="text-[11px] sm:text-xs font-semibold text-neutral-500">New Requests</span>
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform ${
                 pendingBookings.length > 0 ? 'bg-red-50 text-red-600' : 'bg-neutral-100 text-neutral-500'
               }`}>
-                <BellRing className="w-4 h-4" />
+                <BellRing className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="mt-4">
-              <span className={`text-2xl font-black font-sans ${pendingBookings.length > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
+            <div className="mt-3 sm:mt-4">
+              <span className={`text-xl sm:text-2xl font-black font-sans ${pendingBookings.length > 0 ? 'text-red-600' : 'text-neutral-900'}`}>
                 {pendingBookings.length}
               </span>
             </div>
@@ -206,19 +206,19 @@ export default function GuideDashboardPage() {
           {/* Active Experiences */}
           <Link
             to="/guide/experiences"
-            className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-guide-navy hover:shadow-md transition-all flex flex-col justify-between group"
+            className="bg-white p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-guide-navy hover:shadow-md transition-all flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-neutral-500">Active Experiences</span>
-              <div className="w-8 h-8 rounded-lg bg-sky-50 text-guide-headerNavy flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Layers className="w-4 h-4" />
+              <span className="text-[11px] sm:text-xs font-semibold text-neutral-500">Active Experiences</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-50 text-guide-headerNavy flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="mt-4">
-              <span className="text-2xl font-black text-guide-headerNavy font-sans block">
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xl sm:text-2xl font-black text-guide-headerNavy font-sans block">
                 {approvedExp} Published
               </span>
-              <span className="text-[11px] text-neutral-400 font-medium">
+              <span className="text-[10px] sm:text-[11px] text-neutral-400 font-medium">
                 {pendingExp} Pending
               </span>
             </div>
@@ -227,19 +227,19 @@ export default function GuideDashboardPage() {
           {/* Upcoming Trips */}
           <Link
             to="/guide/bookings"
-            className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between group"
+            className="bg-white p-3.5 sm:p-5 rounded-2xl border border-neutral-200/80 shadow-xs hover:border-indigo-400 hover:shadow-md transition-all flex flex-col justify-between group"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-neutral-500">Upcoming Trips</span>
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Plane className="w-4 h-4" />
+              <span className="text-[11px] sm:text-xs font-semibold text-neutral-500">Upcoming Trips</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="mt-4">
-              <span className="text-2xl font-black text-indigo-700 font-sans block">
+            <div className="mt-3 sm:mt-4">
+              <span className="text-xl sm:text-2xl font-black text-indigo-700 font-sans block">
                 {upcomingBookings} Trips
               </span>
-              <span className="text-[11px] text-neutral-400 font-medium">
+              <span className="text-[10px] sm:text-[11px] text-neutral-400 font-medium">
                 {completedBookings} Completed
               </span>
             </div>

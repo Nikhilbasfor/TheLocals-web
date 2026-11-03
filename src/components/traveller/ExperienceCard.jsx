@@ -65,92 +65,150 @@ export default function ExperienceCard({
   return (
     <Link 
       to={`/experience/${id}`}
-      className="group block bg-white rounded-2xl overflow-hidden border border-neutral-200/80 hover:border-neutral-300 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+      className="group block bg-white rounded-2xl overflow-hidden border border-neutral-200/80 hover:border-neutral-300 shadow-xs hover:shadow-md transition-all duration-200"
     >
-      {/* Cover Image & Badges */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-        <img
-          src={displayImage}
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
+      {/* ================= MOBILE VIEW (sm:hidden) ================= */}
+      {/* Matches Flutter reference app: Horizontal scannable card */}
+      <div className="flex sm:hidden p-3 gap-3 items-center">
+        {/* Left Info Column */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between self-stretch py-0.5">
+          {/* Top Line: Location Pin & Name + Category Tag */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="flex items-center gap-1 text-[11px] font-medium text-neutral-600 truncate max-w-[130px]">
+              <MapPin className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <span className="truncate">{city ? `${city}, ${state}` : state}</span>
+            </span>
+            <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded border border-neutral-200 text-neutral-600 uppercase">
+              {category}
+            </span>
+          </div>
 
-        {/* Gradient Scrim */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
+          {/* Title */}
+          <h3 className="font-bold text-sm text-neutral-900 group-hover:text-emerald-700 transition-colors line-clamp-1 mt-1 font-sans">
+            {title}
+          </h3>
 
-        {/* Category & Duration Badges */}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-bold tracking-wider px-2.5 py-1 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 uppercase">
-            {category}
-          </span>
-          <span className="text-[11px] font-bold tracking-wider px-2.5 py-1 rounded-full bg-traveller-forestDark/80 text-emerald-300 backdrop-blur-md border border-emerald-400/30 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {durationLabel}
-          </span>
+          {/* Duration & Guide */}
+          <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 mt-1">
+            <Clock className="w-3 h-3 text-neutral-400" />
+            <span>{durationLabel}</span>
+            <span>&bull;</span>
+            <span className="truncate max-w-[90px] font-medium text-neutral-600">{guideName}</span>
+          </div>
+
+          {/* Price */}
+          <div className="mt-1.5">
+            <span className="text-base font-extrabold text-emerald-600 font-sans">
+              ₹{Number(price).toLocaleString('en-IN')}
+            </span>
+          </div>
         </div>
 
-        {/* Wishlist Heart Button */}
-        <button
-          onClick={handleHeartClick}
-          aria-label="Save to Wishlist"
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-white backdrop-blur-md flex items-center justify-center transition-transform hover:scale-110 shadow-md"
-        >
-          <Heart 
-            className={`w-4 h-4 transition-colors ${
-              saved ? 'fill-red-500 text-red-500' : 'text-neutral-700'
-            }`} 
+        {/* Right Thumbnail Photo */}
+        <div className="relative w-28 h-24 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0 shadow-xs">
+          <img
+            src={displayImage}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
-        </button>
-
-        {/* Rating chip on image */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/60 text-white backdrop-blur-md text-xs font-bold">
-          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-          <span>{Number(rating).toFixed(1)}</span>
-          {reviewCount > 0 && (
-            <span className="text-white/60 font-normal">({reviewCount})</span>
-          )}
+          <button
+            onClick={handleHeartClick}
+            aria-label="Save to Wishlist"
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center shadow-xs"
+          >
+            <Heart 
+              className={`w-3.5 h-3.5 ${saved ? 'fill-red-500 text-red-500' : 'text-neutral-700'}`} 
+            />
+          </button>
         </div>
       </div>
 
-      {/* Card Body */}
-      <div className="p-4 space-y-2.5">
-        
-        {/* Location & Guide */}
-        <div className="flex items-center justify-between text-xs text-neutral-500">
-          <div className="flex items-center gap-1 truncate max-w-[170px]">
-            <MapPin className="w-3.5 h-3.5 text-traveller-mint flex-shrink-0" />
-            <span className="truncate">{city ? `${city}, ${state}` : state}</span>
+      {/* ================= DESKTOP VIEW (hidden sm:block) ================= */}
+      <div className="hidden sm:block">
+        {/* Cover Image & Badges */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+          <img
+            src={displayImage}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+
+          {/* Gradient Scrim */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
+
+          {/* Category & Duration Badges */}
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-bold tracking-wider px-2.5 py-1 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 uppercase">
+              {category}
+            </span>
+            <span className="text-[11px] font-bold tracking-wider px-2.5 py-1 rounded-full bg-traveller-forestDark/80 text-emerald-300 backdrop-blur-md border border-emerald-400/30 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {durationLabel}
+            </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
-            <ShieldCheck className="w-3 h-3 text-emerald-600" />
-            <span className="truncate max-w-[90px]">{guideName}</span>
+          {/* Wishlist Heart Button */}
+          <button
+            onClick={handleHeartClick}
+            aria-label="Save to Wishlist"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 hover:bg-white backdrop-blur-md flex items-center justify-center transition-transform hover:scale-110 shadow-md"
+          >
+            <Heart 
+              className={`w-4 h-4 transition-colors ${
+                saved ? 'fill-red-500 text-red-500' : 'text-neutral-700'
+              }`} 
+            />
+          </button>
+
+          {/* Rating chip on image */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/60 text-white backdrop-blur-md text-xs font-bold">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span>{Number(rating).toFixed(1)}</span>
+            {reviewCount > 0 && (
+              <span className="text-white/60 font-normal">({reviewCount})</span>
+            )}
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="font-bold text-base text-neutral-900 group-hover:text-traveller-forestDark transition-colors line-clamp-2 leading-snug font-sans">
-          {title}
-        </h3>
+        {/* Card Body */}
+        <div className="p-4 space-y-2.5">
+          {/* Location & Guide */}
+          <div className="flex items-center justify-between text-xs text-neutral-500">
+            <div className="flex items-center gap-1 truncate max-w-[170px]">
+              <MapPin className="w-3.5 h-3.5 text-traveller-mint flex-shrink-0" />
+              <span className="truncate">{city ? `${city}, ${state}` : state}</span>
+            </div>
 
-        {/* Price & Booking Call */}
-        <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
-          <div>
-            <span className="text-xs text-neutral-400 font-medium">Starting from</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-extrabold text-neutral-900 font-sans">
-                ₹{Number(price).toLocaleString('en-IN')}
-              </span>
-              <span className="text-[11px] text-neutral-500 font-medium">/ person</span>
+            <div className="flex items-center gap-1 text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span className="truncate max-w-[90px]">{guideName}</span>
             </div>
           </div>
 
-          <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-traveller-lightMint text-traveller-forestDark border border-traveller-mint/20 group-hover:bg-traveller-mint group-hover:text-white transition-colors">
-            View Details
-          </span>
-        </div>
+          {/* Title */}
+          <h3 className="font-bold text-base text-neutral-900 group-hover:text-traveller-forestDark transition-colors line-clamp-2 leading-snug font-sans">
+            {title}
+          </h3>
 
+          {/* Price & Booking Call */}
+          <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+            <div>
+              <span className="text-xs text-neutral-400 font-medium">Starting from</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-extrabold text-neutral-900 font-sans">
+                  ₹{Number(price).toLocaleString('en-IN')}
+                </span>
+                <span className="text-[11px] text-neutral-500 font-medium">/ person</span>
+              </div>
+            </div>
+
+            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-traveller-lightMint text-traveller-forestDark border border-traveller-mint/20 group-hover:bg-traveller-mint group-hover:text-white transition-colors">
+              View Details
+            </span>
+          </div>
+        </div>
       </div>
     </Link>
   );

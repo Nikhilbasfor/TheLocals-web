@@ -31,7 +31,7 @@ export default function BottomNav() {
   const tabs = isGuide ? guideTabs : travellerTabs;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 px-2 py-1.5 md:hidden shadow-lg safe-area-pb">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200/80 px-2 py-1 md:hidden shadow-lg safe-area-pb">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -40,21 +40,25 @@ export default function BottomNav() {
               key={tab.label + tab.path}
               to={tab.path}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all duration-150 ${
+                `flex flex-col items-center justify-center py-1 px-3 transition-all duration-150 ${
                   isActive
                     ? isGuide
-                      ? 'text-guide-primary font-bold scale-105'
-                      : 'text-traveller-forestDark font-bold scale-105'
+                      ? 'text-[#065F46] font-bold'
+                      : 'text-[#0B3B2C] font-bold'
                     : 'text-neutral-400 hover:text-neutral-600'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <div className={`p-1 rounded-full ${isActive ? (isGuide ? 'bg-guide-skyBlue' : 'bg-traveller-lightMint') : ''}`}>
+                  <div className={`px-3 py-1 rounded-full transition-all ${
+                    isActive 
+                      ? (isGuide ? 'bg-[#059669] text-white shadow-xs' : 'bg-[#0B3B2C] text-white shadow-xs') 
+                      : 'text-neutral-500'
+                  }`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] tracking-tight mt-0.5 font-medium">
+                  <span className={`text-[10px] tracking-tight mt-0.5 ${isActive ? 'font-bold' : 'font-medium'}`}>
                     {tab.label}
                   </span>
                 </>

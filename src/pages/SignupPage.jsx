@@ -24,7 +24,9 @@ import {
   KeyRound,
   CheckCircle2,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  Compass,
+  Backpack
 } from 'lucide-react';
 
 export default function SignupPage() {
@@ -313,51 +315,72 @@ export default function SignupPage() {
       }
       overlayAlpha={0.75}
     >
-      <div className="flex-1 flex flex-col justify-center items-center px-4 py-12 max-w-lg mx-auto w-full">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:py-12 max-w-sm sm:max-w-md mx-auto w-full">
         
-        {/* Back Link */}
-        <div className="w-full mb-6">
+        {/* Top Header Bar: Back Circle & Centered Portal Pill */}
+        <div className="w-full flex items-center justify-between mb-4">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-white/80 hover:text-white transition-colors"
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:text-white transition-all shadow-md"
+            title="Back to Portal Selection"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Portal Selection</span>
+            <ArrowLeft className="w-5 h-5" />
           </Link>
+
+          <div className="px-5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-[11px] font-bold tracking-widest text-white/90 uppercase shadow-md">
+            {isGuide ? 'GUIDE PORTAL' : 'TRAVELLER PORTAL'}
+          </div>
+
+          {/* Spacer to keep pill perfectly centered */}
+          <div className="w-10 h-10" />
         </div>
 
-        {/* Card Container */}
-        <div className="w-full rounded-3xl p-6 md:p-8 border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl text-white">
+        {/* Card Container: Sleek Dark Glassmorphic Card (#121A26) */}
+        <div className="w-full rounded-3xl p-6 sm:p-8 border border-white/10 bg-[#121A26]/95 backdrop-blur-2xl shadow-2xl text-white">
           
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-black tracking-wider uppercase font-sans">
-              Create Your Account
+          {/* Centered Circular Icon Badge & Title */}
+          <div className="text-center mb-5">
+            <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 shadow-lg ${
+              isGuide 
+                ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-400 shadow-emerald-500/10' 
+                : 'bg-sky-500/20 border border-sky-400/40 text-sky-400 shadow-sky-500/10'
+            }`}>
+              {isGuide ? (
+                <Compass className="w-8 h-8" />
+              ) : (
+                <Backpack className="w-8 h-8" />
+              )}
+            </div>
+
+            <h2 className="text-2xl font-bold tracking-tight text-white font-sans">
+              {isGuide ? 'Guide Sign Up' : 'Traveller Sign Up'}
             </h2>
-            <p className="text-xs text-emerald-200 mt-1 uppercase tracking-wider font-semibold">
-              {isGuide ? 'Join our verified guide & host network' : 'Begin your Himalayan discovery journey'}
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              {isGuide 
+                ? 'Join our verified guide & host network' 
+                : 'Begin your Himalayan discovery journey'}
             </p>
           </div>
 
-          {/* Role Pill */}
-          <div className="flex rounded-xl p-1 bg-black/30 border border-white/10 mb-5">
+          {/* Role Switcher Pill */}
+          <div className="flex rounded-xl p-1 bg-black/40 border border-white/10 mb-4">
             <button
               type="button"
               onClick={() => handleRoleToggle('traveller')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                !isGuide ? 'bg-sky-500 text-white shadow-md' : 'text-white/60 hover:text-white'
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                !isGuide ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Explorer / Traveller
+              Traveller
             </button>
             <button
               type="button"
               onClick={() => handleRoleToggle('guide')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                isGuide ? 'bg-emerald-500 text-white shadow-md' : 'text-white/60 hover:text-white'
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                isGuide ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'
               }`}
             >
-              Local Host / Guide
+              Guide & Host
             </button>
           </div>
 
@@ -378,25 +401,33 @@ export default function SignupPage() {
           </button>
 
           {/* Divider */}
-          <div className="flex items-center my-4">
-            <div className="flex-1 border-t border-white/15"></div>
-            <span className="px-3 text-[10px] uppercase tracking-wider text-white/50 font-bold">Or register with</span>
-            <div className="flex-1 border-t border-white/15"></div>
+          <div className="flex items-center my-3">
+            <div className="flex-1 border-t border-white/10"></div>
+            <span className="px-3 text-[10px] uppercase tracking-wider text-slate-400 font-bold">Or register with</span>
+            <div className="flex-1 border-t border-white/10"></div>
           </div>
 
           {/* Method Tabs: OTP First vs Email & Password */}
-          <div className="flex border-b border-white/15 mb-5 pb-2 text-xs font-bold justify-center gap-6">
+          <div className="flex border-b border-white/10 mb-4 pb-2 text-xs font-bold justify-center gap-6">
             <button
               type="button"
               onClick={() => { setSignupMethod('otp'); setError(null); }}
-              className={`pb-1 transition-all ${signupMethod === 'otp' ? 'text-emerald-300 border-b-2 border-emerald-400 font-extrabold' : 'text-white/60 hover:text-white'}`}
+              className={`pb-1 transition-all ${
+                signupMethod === 'otp' 
+                  ? isGuide ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : 'text-sky-400 border-b-2 border-sky-400 font-bold' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
               Verify via Mobile & OTP
             </button>
             <button
               type="button"
               onClick={() => { setSignupMethod('email'); setError(null); }}
-              className={`pb-1 transition-all ${signupMethod === 'email' ? 'text-emerald-300 border-b-2 border-emerald-400 font-extrabold' : 'text-white/60 hover:text-white'}`}
+              className={`pb-1 transition-all ${
+                signupMethod === 'email' 
+                  ? isGuide ? 'text-emerald-400 border-b-2 border-emerald-400 font-bold' : 'text-sky-400 border-b-2 border-sky-400 font-bold' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
             >
               Email & Password
             </button>
@@ -404,7 +435,7 @@ export default function SignupPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -425,7 +456,7 @@ export default function SignupPage() {
                         value={countryCode}
                         disabled={otpSent}
                         onChange={(e) => setCountryCode(e.target.value)}
-                        className="w-28 px-2 py-2.5 rounded-xl bg-neutral-900 border border-white/20 text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                        className="w-24 px-2 py-2.5 rounded-xl bg-[#1E293B] border border-slate-700/80 text-white text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-400"
                       >
                         {COUNTRY_LIST.map((c) => (
                           <option key={c.dialCode + c.code} value={c.dialCode} className="bg-neutral-900 text-white">
@@ -435,7 +466,7 @@ export default function SignupPage() {
                       </select>
 
                       <div className="relative flex-1">
-                        <Phone className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                        <Phone className={`w-4 h-4 absolute left-3.5 top-3 ${isGuide ? 'text-emerald-400' : 'text-sky-400'}`} />
                         <input
                           type="tel"
                           required
@@ -443,7 +474,7 @@ export default function SignupPage() {
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
                           placeholder="98765 43210"
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#1E293B]/80 border border-slate-700/80 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400"
                         />
                       </div>
                     </div>
@@ -454,10 +485,10 @@ export default function SignupPage() {
                       type="button"
                       onClick={handleSendOtp}
                       disabled={otpSending}
-                      className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
+                      className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
                         isGuide
-                          ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                          : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                          ? 'bg-[#00C070] hover:bg-[#059669] text-white shadow-emerald-900/30'
+                          : 'bg-[#0094F7] hover:bg-[#0284C7] text-white shadow-sky-900/30'
                       }`}
                     >
                       {otpSending ? (
@@ -471,18 +502,18 @@ export default function SignupPage() {
                     </button>
                   ) : (
                     <div className="space-y-4 pt-1 animate-in fade-in duration-200">
-                      {/* Clean text with circular check icon (NOT in green banner) */}
+                      {/* Clean text with circular check icon */}
                       <div className="flex items-center gap-2 py-1 px-0.5 text-xs text-white/90 font-medium">
-                        <CheckCircle2 className="w-4 h-4 text-white/70 flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                         <span>OTP sent to {countryCode} {phoneNumber}</span>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-white/80 mb-1.5">
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1">
                           Enter 6-Digit OTP Code
                         </label>
                         <div className="relative">
-                          <KeyRound className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
+                          <KeyRound className={`w-4 h-4 absolute left-3.5 top-3 ${isGuide ? 'text-emerald-400' : 'text-sky-400'}`} />
                           <input
                             type="text"
                             maxLength="6"
@@ -490,7 +521,7 @@ export default function SignupPage() {
                             value={enteredOtp}
                             onChange={(e) => setEnteredOtp(e.target.value)}
                             placeholder="Type OTP here"
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 text-center tracking-widest font-mono text-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#1E293B]/90 border border-slate-700 text-white placeholder-slate-400 text-center tracking-widest font-mono text-lg focus:outline-none focus:ring-1 focus:ring-emerald-400"
                           />
                         </div>
                       </div>
@@ -499,17 +530,17 @@ export default function SignupPage() {
                         <button
                           type="button"
                           onClick={() => { setOtpSent(false); setEnteredOtp(''); }}
-                          className="px-4 py-2.5 rounded-xl border border-white/20 text-xs font-semibold hover:bg-white/10"
+                          className="px-3.5 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800"
                         >
                           Change Number
                         </button>
                         <button
                           type="submit"
                           disabled={isLoading}
-                          className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
+                          className={`flex-1 py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
                             isGuide
-                              ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                              : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                              ? 'bg-[#00C070] hover:bg-[#059669] text-white shadow-emerald-900/30'
+                              : 'bg-[#0094F7] hover:bg-[#0284C7] text-white shadow-sky-900/30'
                           }`}
                         >
                           {isLoading ? (
@@ -527,7 +558,7 @@ export default function SignupPage() {
                         type="button"
                         disabled={otpSending}
                         onClick={handleSendOtp}
-                        className="w-full py-2 text-center text-xs font-semibold text-white/70 hover:text-white transition"
+                        className="w-full py-1 text-center text-xs font-semibold text-slate-400 hover:text-white transition"
                       >
                         {otpSending ? 'Sending New OTP...' : 'Resend Verification SMS OTP'}
                       </button>
@@ -703,19 +734,19 @@ export default function SignupPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
+                    className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
                       isGuide
-                        ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                        : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                        ? 'bg-[#00C070] hover:bg-[#059669] text-white shadow-emerald-900/30'
+                        : 'bg-[#0094F7] hover:bg-[#0284C7] text-white shadow-sky-900/30'
                     }`}
                   >
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Creating Unified Profile...</span>
+                        <span>Creating Profile...</span>
                       </>
                     ) : (
-                      <span>Complete Registration</span>
+                      <span>{isGuide ? 'Complete Guide Registration' : 'Complete Traveller Registration'}</span>
                     )}
                   </button>
                 </form>
@@ -945,10 +976,10 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-3 rounded-xl font-bold text-sm tracking-wider uppercase transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
+                className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 shadow-lg mt-3 ${
                   isGuide
-                    ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
-                    : 'bg-sky-500 hover:bg-sky-400 text-white shadow-sky-500/20'
+                    ? 'bg-[#00C070] hover:bg-[#059669] text-white shadow-emerald-900/30'
+                    : 'bg-[#0094F7] hover:bg-[#0284C7] text-white shadow-sky-900/30'
                 }`}
               >
                 {isLoading ? (
@@ -957,21 +988,27 @@ export default function SignupPage() {
                     <span>Creating Account...</span>
                   </>
                 ) : (
-                  <span>Create Unified Account</span>
+                  <span>{isGuide ? 'Create GUIDE Account' : 'Create TRAVELLER Account'}</span>
                 )}
               </button>
             </form>
           )}
 
           {/* Switch to Login */}
-          <div className="mt-6 text-center text-xs text-white/70">
+          <div className="mt-5 text-center text-xs text-slate-400">
             Already registered?{' '}
             <Link
               to={`/login?role=${activeRole}`}
-              className="font-bold text-white hover:text-emerald-300 underline underline-offset-4 ml-1"
+              className={`font-semibold underline underline-offset-4 ml-1 ${
+                isGuide ? 'text-emerald-400 hover:text-emerald-300' : 'text-sky-400 hover:text-sky-300'
+              }`}
             >
               Sign In
             </Link>
+          </div>
+
+          <div className="mt-3 text-center">
+            <Link to="/privacy" className="text-[11px] text-slate-500 hover:text-slate-400">Privacy Policy</Link>
           </div>
 
         </div>

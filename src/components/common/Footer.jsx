@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-neutral-200 mt-auto pb-20 md:pb-8 pt-12">
+    <footer className="bg-white border-t border-neutral-200 mt-auto pb-24 md:pb-8 pt-8 sm:pt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Brand Pillars Banner */}
-        <div className="py-4 px-6 rounded-2xl bg-traveller-forestDark text-white text-center mb-10 shadow-sm">
-          <p className="text-xs sm:text-sm font-semibold tracking-wider text-emerald-200 uppercase">
-            Locals ★ Offbeat ★ Immersive ★ Slow and Sustainable
+        <div className="py-2.5 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-[#0B3B2C] text-white text-center mb-6 sm:mb-10 shadow-xs">
+          <p className="text-[11px] sm:text-xs font-bold tracking-wider text-emerald-200 uppercase">
+            Locals &bull; Offbeat &bull; Immersive &bull; Slow and Sustainable
           </p>
         </div>
 
